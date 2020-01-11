@@ -15,7 +15,7 @@ class Wall {
     ~Wall();
 
     static bool init(TextureWrapper* texture, int dim);
-    void render();
+    void render(int camX, int camY);
     SDL_Rect getHitBox();
 };
 

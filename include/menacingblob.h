@@ -15,8 +15,8 @@ class MenacingBlob: public AbstractEnemy {
     MenacingBlob(int x, int y);
     ~MenacingBlob();
 
-    void move() override;
-    void render() override;
+    void move(int top, int bot, int right, int left) override;
+    void render(int camX, int camY) override;
 
     static bool init(TextureWrapper* texture);
 

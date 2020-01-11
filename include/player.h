@@ -20,9 +20,9 @@ class Player: public AbstractEntity {
 
     void handleEvent(SDL_Event& event);
 
-    void move() override;
+    void move(int top, int bot, int right, int left) override;
 
-    void render() override;
+    void render(int camX, int camY) override;
 
     static bool init(TextureWrapper* texture);
 

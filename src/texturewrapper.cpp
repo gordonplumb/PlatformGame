@@ -53,9 +53,9 @@ void TextureWrapper::free() {
     }
 }
 
-void TextureWrapper::render(int x, int y, SDL_Rect* clip, double angle,
+void TextureWrapper::render(int x, int y, int camX, int camY, SDL_Rect* clip, double angle,
                             SDL_Point* centre, SDL_RendererFlip flip) {
-    SDL_Rect renderRect = {x, y, mWidth, mHeight};
+    SDL_Rect renderRect = {x - camX, y - camY, mWidth, mHeight};
 
     if (clip != NULL) {
         renderRect.w = clip->w;

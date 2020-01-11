@@ -10,8 +10,8 @@ class AbstractEntity {
                    int posY, int maxWalkingFrame);
     virtual ~AbstractEntity() {}
 
-    virtual void move() = 0;
-    virtual void render() = 0;
+    virtual void move(int top, int bot, int right, int left) = 0;
+    virtual void render(int camX, int camY) = 0;
 
     void changePosX(int amount);
     void changePosY(int amount);

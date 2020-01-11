@@ -22,8 +22,11 @@ class Game {
     bool init();
     void handleEvent(SDL_Event& event);
     void moveEntities();
-    void render();
+    void render(int camX, int camY);
     void setLevel(Level* level);
+
+    SDL_Point getFocus();
+    SDL_Point getMax();
 };
 
 #endif

@@ -55,13 +55,13 @@ bool Level::init() {
     return true;
 }
 
-void Level::render() {
+void Level::render(int camX, int camY) {
     for (Wall* wall : mWalls) {
-        wall->render();
+        wall->render(camX, camY);
     }
 
     for (AbstractEnemy* enemy : mEnemies) {
-        enemy->render();
+        enemy->render(camX, camY);
     }
 }
 
@@ -83,4 +83,12 @@ void Level::addLaser(Laser* laser) {
 
 void Level::updateLasers(vector<Laser*> lasers) {
     mLasers = lasers;
+}
+
+int Level::getWidth() {
+    return mWidth;
+}
+
+int Level::getHeight() {
+    return mHeight;
 }

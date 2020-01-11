@@ -9,7 +9,7 @@ MenacingBlob::MenacingBlob(int x, int y):
 
 MenacingBlob::~MenacingBlob() {}
 
-void MenacingBlob::move() {
+void MenacingBlob::move(int top, int bot, int right, int left) {
     // TODO: different movement behaviour
     applyGravity();
     if (mPosX <= 200) {
@@ -24,11 +24,18 @@ void MenacingBlob::move() {
     if (mVelX != 0) {
         mForward = !(mVelX > 0);
     }
+    if (mPosX < left || mPosX + BLOB_WIDTH > right) {
+        mPosX -= mVelX;
+    }
+
+    if (mPosY < top || mPosY + BLOB_HEIGHT > bot) {
+        mPosY -= mVelY;
+    }
     mHitBox.x = mPosX;
     mHitBox.y = mPosY;
 }
 
-void MenacingBlob::render() {
+void MenacingBlob::render(int camX, int camY) {
     SDL_Rect clip;
 
     if (mVelX == 0) {
@@ -43,7 +50,7 @@ void MenacingBlob::render() {
         }
     }
 
-    TEXTURE->render(mPosX, mPosY, &clip, 0.0, NULL,
+    TEXTURE->render(mPosX, mPosY, camX, camY, &clip, 0.0, NULL,
                     mForward ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL);
 }
 

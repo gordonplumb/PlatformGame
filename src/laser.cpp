@@ -13,7 +13,7 @@ bool Laser::init(TextureWrapper* texture) {
     return true;
 }
 
-void Laser::move() {
+void Laser::move(int top, int bot, int right, int left) {
     // modify this to allow lasers to be shot vertically
     mPosX += LASER_MAX_SPEED * xModifier;
     mPosY += 0;
@@ -21,6 +21,6 @@ void Laser::move() {
     mHitBox.y = mPosY;
 }
 
-void Laser::render() {
-    TEXTURE->render(mHitBox.x, mHitBox.y);
+void Laser::render(int camX, int camY) {
+    TEXTURE->render(mHitBox.x, mHitBox.y, camX, camY);
 }

@@ -1,11 +1,9 @@
+#include <gameconstants.h>
 #include <player.h>
 #include <laser.h>
 
-int SCREEN_WIDTH = 640;
-int SCREEN_HEIGHT = 480;
-
 TextureWrapper* Player::TEXTURE;
-SDL_Rect Player::PLAYER_CLIPS[ 3 ];
+SDL_Rect Player::PLAYER_CLIPS[3];
 const int Player::PLAYER_WIDTH = 50;
 const int Player::PLAYER_HEIGHT = 100;
 const int Player::PLAYER_MAX_SPEED = 3;
@@ -41,10 +39,10 @@ void Player::handleEvent(SDL_Event& event) {
 
 }
 
-void Player::move() {
+void Player::move(int top, int bot, int right, int left) {
     applyGravity();
     mPosX += mVelX;
-    if ((mPosX < 0) || (mPosX + PLAYER_WIDTH > SCREEN_WIDTH)) {
+    if ((mPosX < left) || (mPosX + PLAYER_WIDTH > right)) {
         mPosX -= mVelX;
     }
 
@@ -54,14 +52,14 @@ void Player::move() {
     }
 
     mPosY += mVelY;
-    if ((mPosY < 0) || (mPosY + PLAYER_HEIGHT > SCREEN_HEIGHT)) {
+    if ((mPosY < top) || (mPosY + PLAYER_HEIGHT > bot)) {
         mPosY -= mVelY;
     }
     mHitBox.x = mPosX;
     mHitBox.y = mPosY;
 }
 
-void Player::render() {
+void Player::render(int camX, int camY) {
     SDL_Rect clip;
     if (mVelX == 0) {
         clip = PLAYER_CLIPS[0];
@@ -74,7 +72,7 @@ void Player::render() {
         }
     }
     
-    TEXTURE->render(mPosX, mPosY, &clip, 0.0, NULL,
+    TEXTURE->render(mPosX, mPosY, camX, camY, &clip, 0.0, NULL,
                     mForward ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL);
 }
 

@@ -3,6 +3,7 @@
 #include <string>
 #include <texturewrapper.h>
 #include <game.h>
+#include <gameconstants.h>
 #include <level.h>
 #include <wall.h>
 #include <player.h>
@@ -11,16 +12,12 @@
 
 using namespace std;
 
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
-
 SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
 
 // move this to view class eventually
 TextureWrapper gPlayerSprite;
 TextureWrapper gMenacingBlobSprite;
-TextureWrapper gTexture;
 TextureWrapper gWall;
 TextureWrapper gLaser;
 
@@ -83,28 +80,6 @@ bool initMedia() {
     return success;
 }
 
-// load a single image
-// SDL_Surface* loadSurface( string path ) {
-//     SDL_Surface* optimizedSurface = NULL;
-//     SDL_Surface* surface = SDL_LoadBMP( path.c_str() );
-
-//     if( surface == NULL ) {
-//         cerr << "Unable to load image " << path << ", SDL Error: ";
-//         cerr << SDL_GetError() << endl;
-//     } else {
-//         optimizedSurface = SDL_ConvertSurface( surface, gSurface->format, 0 );
-
-//         if( optimizedSurface == NULL ) {
-//             cerr << "Unable to optimize image " << path << ", SDL Error: ";
-//             cerr << SDL_GetError() << endl;
-//         }
-
-//         SDL_FreeSurface( surface );
-//     }
-
-//     return optimizedSurface;
-// }
-
 SDL_Texture* loadTexture(string path) {
     SDL_Texture* texture = NULL;
 
@@ -137,11 +112,6 @@ bool loadMedia() {
         success = false;
     }
 
-    if (!gTexture.loadTexture("media/background1.bmp")) {
-        cerr << "Failed to load background1" << endl;
-        success = false;
-    }
-
     if (!gWall.loadTexture("media/wall.bmp")) {
         cerr << "Failed to load wall texture" << endl;
         success = false;
@@ -158,7 +128,6 @@ bool loadMedia() {
 void close() {
     gPlayerSprite.free();
     gMenacingBlobSprite.free();
-    gTexture.free();
 
     SDL_DestroyRenderer(gRenderer);
     SDL_DestroyWindow(gWindow);
@@ -178,6 +147,7 @@ int main(int argc, char** argv) {
             if (initMedia()) {
                 bool quit = false;
                 SDL_Event event;
+                SDL_Rect camera = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 
                 Game* game = new Game();
                 game->init();
@@ -194,12 +164,27 @@ int main(int argc, char** argv) {
                     }
 
                     game->moveEntities();
+                    SDL_Point focus = game->getFocus();
+                    camera.x = focus.x;
+                    camera.y = focus.y;
+
+                    SDL_Point max = game->getMax();
+                    if (camera.x < 0) {
+                        camera.x = 0;
+                    } else if (camera.x > max.x - camera.w) {
+                        camera.x = max.x - camera.w;
+                    }
+                    if (camera.y < 0) {
+                        camera.y = 0;
+                    } else if (camera.y > max.y - camera.h) {
+                        camera.y = max.y - camera.h;
+                    }
+                    cout << "x: " << camera.x << " y: " << camera.y << endl;
 
                     SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
                     SDL_RenderClear(gRenderer);
 
-                    gTexture.render(0, 0);
-                    game->render();
+                    game->render(camera.x, camera.y);
 
                     SDL_RenderPresent(gRenderer);
                 }

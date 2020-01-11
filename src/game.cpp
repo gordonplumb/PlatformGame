@@ -1,4 +1,5 @@
 #include <game.h>
+#include <gameconstants.h>
 #include <level.h>
 #include <wall.h>
 #include <player.h>
@@ -74,7 +75,7 @@ void Game::moveEntities() {
     vector<int> removeList;
     for (int i = 0; i < lasers.size(); i++) {
         Laser* laser = lasers.at(i);
-        laser->move();
+        laser->move(0, mLevel->getHeight(), mLevel->getWidth(), 0);
         for (Wall* wall : walls) {
             int collision = checkCollision(laser->getHitBox(), wall->getHitBox());
             if (collision > 0) {
@@ -89,7 +90,7 @@ void Game::moveEntities() {
     }
 
     // move the player, make sure they're not in a wall
-    mPlayer->move();
+    mPlayer->move(0, mLevel->getHeight(), mLevel->getWidth(), 0);
     for (Wall* wall : walls) {
         int collision = checkCollision(mPlayer->getHitBox(), wall->getHitBox());
         if (collision > 0) {
@@ -101,7 +102,7 @@ void Game::moveEntities() {
     //                 ensure they're not in any walls
     //                 check for player-enemy collision
     for (AbstractEnemy* enemy : enemies) {
-        enemy->move();
+        enemy->move(0, mLevel->getHeight(), mLevel->getWidth(), 0);
         for (Wall* wall : walls) {
             int collision = checkCollision(enemy->getHitBox(), wall->getHitBox());
             if (collision > 0) {
@@ -162,19 +163,19 @@ void Game::handleEntityWallCollision(AbstractEntity* entity, Wall* wall, int col
     }
 }
 
-void Game::render() {
+void Game::render(int camX, int camY) {
     vector<AbstractEnemy*> enemies = mLevel->getEnemies();
     vector<Wall*> walls = mLevel->getWalls();
     vector<Laser*> lasers = mLevel->getLasers();
-    mPlayer->render();
+    mPlayer->render(camX, camY);
     for (AbstractEnemy* enemy : enemies) {
-        enemy->render();
+        enemy->render(camX, camY);
     }
     for (Wall* wall : walls) {
-        wall->render();
+        wall->render(camX, camY);
     }
     for (Laser* laser : lasers) {
-        laser->render();
+        laser->render(camX, camY);
     }
 }
 
@@ -225,4 +226,13 @@ int Game::checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2) {
 
 void Game::setLevel(Level* level) {
     mLevel = level;
+}
+
+SDL_Point Game::getFocus() {
+    return SDL_Point {mPlayer->getHitBox().x + (mPlayer->PLAYER_WIDTH - SCREEN_WIDTH) / 2,
+                      mPlayer->getHitBox().y + (mPlayer->PLAYER_HEIGHT - SCREEN_HEIGHT) / 2};
+}
+
+SDL_Point Game::getMax() {
+    return SDL_Point {mLevel->getWidth(), mLevel->getHeight()};
 }

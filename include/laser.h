@@ -14,8 +14,8 @@ class Laser: public AbstractEntity {
     Laser(int x, int y, int xModifier, int yModifier);
     ~Laser();
 
-    void move() override;
-    void render() override;
+    void move(int top, int bot, int right, int left) override;
+    void render(int camX, int camY) override;
 
     static bool init(TextureWrapper* texture);
 

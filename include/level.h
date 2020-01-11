@@ -21,12 +21,15 @@ class Level {
     ~Level();
 
     bool init();
-    void render();
+    void render(int camX, int camY);
     std::vector<Wall*> getWalls();
     std::vector<AbstractEnemy*> getEnemies();
     std::vector<Laser*> getLasers();
     void addLaser(Laser* laser);
     void updateLasers(std::vector<Laser*> lasers);
+
+    int getWidth();
+    int getHeight();
 };
 
 #endif
