@@ -85,6 +85,35 @@ void Level::updateLasers(vector<Laser*> lasers) {
     mLasers = lasers;
 }
 
+void Level::updateEnemies(vector<AbstractEnemy *> enemies) {
+    vector<AbstractEnemy *> newEnemies;
+    for (AbstractEnemy * enemy : enemies) {
+        if (enemy != nullptr) {
+            newEnemies.push_back(enemy);
+        }
+    }
+    mEnemies = newEnemies;
+}
+
+void Level::respawnEnemies() {
+    mEnemies.clear();
+
+    ifstream file {mFilePath};
+    string s;
+    string flag;
+    int x, y;
+    while (getline(file, s)) {
+        istringstream iss {s};
+
+        iss >> flag;
+        if (flag == "mb") {
+            iss >> x;
+            iss >> y;
+            mEnemies.emplace_back(new MenacingBlob(x, y));
+        }
+    }
+}
+
 int Level::getWidth() {
     return mWidth;
 }

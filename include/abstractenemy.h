@@ -6,7 +6,7 @@
 class AbstractEnemy: public AbstractEntity {
     public:
     AbstractEnemy(int width, int height, int maxSpeed, int x, int y,
-                  int maxWalkingFrame);
+                  int totalHP, int maxWalkingFrame);
     ~AbstractEnemy();
 };
 

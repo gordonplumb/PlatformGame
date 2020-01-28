@@ -1,4 +1,4 @@
-out/
+main
 lib/
 include/SDL2/
 tbdgame.code-workspace

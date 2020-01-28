@@ -27,6 +27,8 @@ class Level {
     std::vector<Laser*> getLasers();
     void addLaser(Laser* laser);
     void updateLasers(std::vector<Laser*> lasers);
+    void updateEnemies(std::vector<AbstractEnemy *> enemies);
+    void respawnEnemies();
 
     int getWidth();
     int getHeight();

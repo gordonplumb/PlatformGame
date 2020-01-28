@@ -5,11 +5,11 @@ TextureWrapper* MenacingBlob::TEXTURE;
 SDL_Rect MenacingBlob::BLOB_CLIPS[2];
 
 MenacingBlob::MenacingBlob(int x, int y): 
-    AbstractEnemy(BLOB_WIDTH, BLOB_HEIGHT, MAX_SPEED, x, y, WALKING_FRAMES) {}
+    AbstractEnemy(BLOB_WIDTH, BLOB_HEIGHT, MAX_SPEED, x, y, 1, WALKING_FRAMES) {}
 
 MenacingBlob::~MenacingBlob() {}
 
-void MenacingBlob::move(int top, int bot, int right, int left) {
+void MenacingBlob::move(int top, int bot, int left, int right) {
     // TODO: different movement behaviour
     applyGravity();
     if (mPosX <= 200) {
@@ -50,7 +50,7 @@ void MenacingBlob::render(int camX, int camY) {
         }
     }
 
-    TEXTURE->render(mPosX, mPosY, camX, camY, &clip, 0.0, NULL,
+    TEXTURE->render(mPosX, mPosY, camX, camY, &clip, 0.0, nullptr,
                     mForward ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL);
 }
 

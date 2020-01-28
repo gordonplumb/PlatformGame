@@ -21,47 +21,78 @@ bool Game::init() {
 
 void Game::handleEvent(SDL_Event& event) {
     if (event.type == SDL_KEYDOWN && event.key.repeat == 0) {
+        const Uint8 *state = SDL_GetKeyboardState(nullptr);
         switch(event.key.keysym.sym) {
-            case SDLK_UP:
-            if (mPlayer->canJump()) {
+            case SDLK_SPACE:
+            // TODO: remove ability to jump after walking off a platform
+            if (mPlayer->canJump() && !mPlayer->isCrouching()) {
                 mPlayer->changeVelY(-15);
                 mPlayer->setJump(false);
             }
             break;
 
+            case SDLK_UP:
+            mPlayer->setLookingUp(true);
+            break;
+
             case SDLK_DOWN:
+            if (state[SDL_SCANCODE_LEFT]) {
+                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
+            }
+            if (state[SDL_SCANCODE_RIGHT]) {
+                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
+            }
+            mPlayer->setCrouch(true);
             break;
 
             case SDLK_LEFT:
-            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
+            // add ability to turn while crouching
+            if (!mPlayer->isCrouching()) mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
             break;
 
             case SDLK_RIGHT:
-            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
+            if (!mPlayer->isCrouching()) mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
             break;
 
             case SDLK_z:
             mLevel->addLaser(mPlayer->fireLaser());
             break;
 
+#ifdef DEBUG
+            case SDLK_r:
+            mLevel->respawnEnemies();
+            break;
+#endif
+
             default:
             break;
         }
     } else if (event.type == SDL_KEYUP && event.key.repeat == 0) {
+        const Uint8 *state = SDL_GetKeyboardState(nullptr);
         switch (event.key.keysym.sym) {
             case SDLK_UP:
-            mPlayer->changeVelY(Player::PLAYER_MAX_SPEED);
+            mPlayer->setLookingUp(false);
             break;
 
             case SDLK_DOWN:
+            if (state[SDL_SCANCODE_LEFT]) {
+                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
+            }
+            if (state[SDL_SCANCODE_RIGHT]) {
+                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
+            }
+            mPlayer->setCrouch(false);
             break;
 
             case SDLK_LEFT:
-            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
+            if (!mPlayer->isCrouching()) mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
             break;
 
             case SDLK_RIGHT:
-            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
+            if (!mPlayer->isCrouching()) mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
+            break;
+
+            default:
             break;
         }
     }
@@ -71,50 +102,93 @@ void Game::moveEntities() {
     vector<AbstractEnemy*> enemies = mLevel->getEnemies();
     vector<Wall*> walls = mLevel->getWalls();
     vector<Laser*> lasers = mLevel->getLasers();
-
     vector<int> removeList;
-    for (int i = 0; i < lasers.size(); i++) {
-        Laser* laser = lasers.at(i);
-        laser->move(0, mLevel->getHeight(), mLevel->getWidth(), 0);
-        for (Wall* wall : walls) {
-            int collision = checkCollision(laser->getHitBox(), wall->getHitBox());
+
+    // move everything first
+    mPlayer->move(0, mLevel->getHeight(), 0, mLevel->getWidth());
+    for (AbstractEnemy *enemy : enemies) {
+        enemy->move(0, mLevel->getHeight(), 0, mLevel->getWidth());
+    }
+    for (Laser *laser : lasers) {
+        laser->move(0, mLevel->getHeight(), 0, mLevel->getWidth());
+    }
+
+    // check for character collisions with walls
+    for (Wall *wall : walls) {
+        int collision = checkCollision(mPlayer->getHitBox(), wall->getHitBox());
+        if (collision > 0) {
+            handleEntityWallCollision(mPlayer, wall, collision);
+        }
+        for (AbstractEnemy *enemy : enemies) {
+            collision = checkCollision(enemy->getHitBox(), wall->getHitBox());
             if (collision > 0) {
-                removeList.push_back(i);
+                handleEntityWallCollision(enemy, wall, collision);
             }
         }
     }
+
+    // check for laser collision with enemies
+    for (int i = 0; i < lasers.size(); i++) {
+        Laser *laser = lasers.at(i);
+        int collision;
+        for (int j = 0; j < enemies.size(); j++) {
+            // TODO: use this for lasers instead of the removeList
+            if (enemies[j] == nullptr) continue;
+            collision = checkCollision(laser->getHitBox(), enemies[j]->getHitBox());
+            if (collision > 0) {
+                // TODO: make this more interesting
+                enemies[j]->changeHP(-1);
+                if (enemies[j]->getHP() <= 0) {
+                    AbstractEnemy *temp = enemies[j];
+                    enemies[j] = nullptr;
+                    delete temp;
+                }
+                removeList.push_back(i);
+                break;
+            }
+        }
+    }
+
     int removed = 0;
     for (int i : removeList) {
         lasers.erase(lasers.begin() + i - removed);
         removed++;
     }
 
-    // move the player, make sure they're not in a wall
-    mPlayer->move(0, mLevel->getHeight(), mLevel->getWidth(), 0);
-    for (Wall* wall : walls) {
-        int collision = checkCollision(mPlayer->getHitBox(), wall->getHitBox());
-        if (collision > 0) {
-            handleEntityWallCollision(mPlayer, wall, collision);
+    // check for laser collision with walls
+    removeList.clear();
+    for (int i = 0; i < lasers.size(); i++) {
+        Laser *laser = lasers.at(i);
+        int collision;
+        for (Wall *wall : walls) {
+            collision = checkCollision(laser->getHitBox(), wall->getHitBox());
+            if (collision > 0) {
+                removeList.push_back(i);
+                break;
+            }
         }
     }
 
-    // for each enemy: move the enemy
-    //                 ensure they're not in any walls
-    //                 check for player-enemy collision
-    for (AbstractEnemy* enemy : enemies) {
-        enemy->move(0, mLevel->getHeight(), mLevel->getWidth(), 0);
-        for (Wall* wall : walls) {
-            int collision = checkCollision(enemy->getHitBox(), wall->getHitBox());
-            if (collision > 0) {
-                handleEntityWallCollision(enemy, wall, collision);
-            }
-        }
+    removed = 0;
+    for (int i : removeList) {
+        lasers.erase(lasers.begin() + i - removed);
+        removed++;
+    }
+
+    // check for player enemy collision
+    for (AbstractEnemy *enemy : enemies) {
+        if (enemy == nullptr) continue;
         int collision = checkCollision(mPlayer->getHitBox(), enemy->getHitBox());
         if (collision > 0) {
             handlePlayerEnemyCollision(mPlayer, collision);
+            if (mPlayer->getHP() <= 0) {
+                cout << "i'm dead" << endl;
+            }
         }
     }
+
     mLevel->updateLasers(lasers);
+    mLevel->updateEnemies(enemies);
 }
 
 void Game::handlePlayerEnemyCollision(Player* player, int collision) {
@@ -130,6 +204,9 @@ void Game::handlePlayerEnemyCollision(Player* player, int collision) {
     } else if ((collision & BOTTOM) > 0) {
         player->changePosY(-5);
     }
+    
+    // TODO: make this more interesting than a constant
+    player->changeHP(-1);
 }
 
 void Game::handleEntityWallCollision(AbstractEntity* entity, Wall* wall, int collision) {

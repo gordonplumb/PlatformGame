@@ -24,12 +24,15 @@ class Player: public AbstractEntity {
 
     void render(int camX, int camY) override;
 
-    static bool init(TextureWrapper* texture);
+    static bool init(TextureWrapper* texture, int textureHeight,
+                     int textureWidth);
 
     Laser* fireLaser();
 
     private:
     static TextureWrapper* TEXTURE;
+    static int TEXTURE_WIDTH;
+    static int TEXTURE_HEIGHT;
     static SDL_Rect PLAYER_CLIPS[];
 };
 

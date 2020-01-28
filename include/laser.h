@@ -9,9 +9,10 @@ class Laser: public AbstractEntity {
     public:
     static const int LASER_WIDTH = 20;
     static const int LASER_HEIGHT = 5;
-    static const int LASER_MAX_SPEED = 4;
+    static const int LASER_MAX_SPEED = 10;
 
-    Laser(int x, int y, int xModifier, int yModifier);
+    Laser(int x, int y, bool horizontal, bool vertical, int xModifier,
+          int yModifier);
     ~Laser();
 
     void move(int top, int bot, int right, int left) override;
@@ -20,8 +21,10 @@ class Laser: public AbstractEntity {
     static bool init(TextureWrapper* texture);
 
     private:
-    int xModifier;
-    int yModifier;
+    bool mHorizontal;
+    bool mVertical;
+    int mXModifier;
+    int mYModifier;
     static TextureWrapper* TEXTURE;
 
 };

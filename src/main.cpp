@@ -12,8 +12,8 @@
 
 using namespace std;
 
-SDL_Window* gWindow = NULL;
-SDL_Renderer* gRenderer = NULL;
+SDL_Window* gWindow = nullptr;
+SDL_Renderer* gRenderer = nullptr;
 
 // move this to view class eventually
 TextureWrapper gPlayerSprite;
@@ -32,22 +32,18 @@ bool init() {
                                    SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH,
                                    SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 
-        if (gWindow == NULL) {
+        if (gWindow == nullptr) {
             cerr << "Window could not be created, SDL_Error " << SDL_GetError() << endl;
             success = false;
         } else {
             gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
-            if (gRenderer == NULL) {
+            if (gRenderer == nullptr) {
                 cerr << "Renderer could not be created, SDL Error: ";
                 cerr << SDL_GetError() << endl;
             } else {
-                SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+                    SDL_SetRenderDrawColor(gRenderer, 192, 192, 192, SDL_ALPHA_OPAQUE);
             }
-
-            // gSurface = SDL_GetWindowSurface( gWindow );
-            // SDL_FillRect( gSurface, NULL, SDL_MapRGB( gSurface->format, 0xFF, 0xFF, 0xFF ) );
-            // SDL_UpdateWindowSurface( gWindow );
         }
     }
 
@@ -57,7 +53,7 @@ bool init() {
 bool initMedia() {
     bool success = true;
 
-    if (!Player::init(&gPlayerSprite)) {
+    if (!Player::init(&gPlayerSprite, 90, 50)) {
         cerr << "Player init failed" << endl;
         success = false;
     }
@@ -81,15 +77,15 @@ bool initMedia() {
 }
 
 SDL_Texture* loadTexture(string path) {
-    SDL_Texture* texture = NULL;
+    SDL_Texture* texture = nullptr;
 
     SDL_Surface* surface = SDL_LoadBMP(path.c_str());
-    if (surface == NULL) {
+    if (surface == nullptr) {
         cerr << "Unable to load " << path << ", SDL Error: " << SDL_GetError() << endl;
     }
     texture = SDL_CreateTextureFromSurface(gRenderer, surface);
 
-    if (texture == NULL) {
+    if (texture == nullptr) {
         cerr << "Unable to create texture from " << path << ", SDL Error: ";
         cerr << SDL_GetError() << endl;
     }
@@ -131,8 +127,8 @@ void close() {
 
     SDL_DestroyRenderer(gRenderer);
     SDL_DestroyWindow(gWindow);
-    gRenderer = NULL;
-    gWindow = NULL;
+    gRenderer = nullptr;
+    gWindow = nullptr;
 
     SDL_Quit();
 }
@@ -179,9 +175,7 @@ int main(int argc, char** argv) {
                     } else if (camera.y > max.y - camera.h) {
                         camera.y = max.y - camera.h;
                     }
-                    cout << "x: " << camera.x << " y: " << camera.y << endl;
 
-                    SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
                     SDL_RenderClear(gRenderer);
 
                     game->render(camera.x, camera.y);
