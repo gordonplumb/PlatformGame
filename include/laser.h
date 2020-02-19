@@ -3,9 +3,16 @@
 
 #include <abstractentity.h>
 
-class TextureWrapper;
+class SDL_Point;
 
 class Laser: public AbstractEntity {
+    double angle;
+    SDL_Point* centre;
+    bool mHorizontal;
+    bool mVertical;
+    int mXModifier;
+    int mYModifier;
+
     public:
     static const int LASER_WIDTH = 20;
     static const int LASER_HEIGHT = 5;
@@ -16,17 +23,7 @@ class Laser: public AbstractEntity {
     ~Laser();
 
     void move(int top, int bot, int right, int left) override;
-    void render(int camX, int camY) override;
-
-    static bool init(TextureWrapper* texture);
-
-    private:
-    bool mHorizontal;
-    bool mVertical;
-    int mXModifier;
-    int mYModifier;
-    static TextureWrapper* TEXTURE;
-
+    void notifyObservers() override;
 };
 
 #endif

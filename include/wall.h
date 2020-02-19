@@ -7,15 +7,11 @@ class TextureWrapper;
 
 class Wall {
     SDL_Rect rect;
-    static TextureWrapper* TEXTURE;
-    static int DIM;
 
     public:
     Wall(int x, int y, int w, int h);
     ~Wall();
 
-    static bool init(TextureWrapper* texture, int dim);
-    void render(int camX, int camY);
     SDL_Rect getHitBox();
 };
 

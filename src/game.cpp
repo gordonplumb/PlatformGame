@@ -1,11 +1,14 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <game.h>
+#include <view.h>
 #include <gameconstants.h>
-#include <level.h>
 #include <wall.h>
 #include <player.h>
 #include <menacingblob.h>
 #include <laser.h>
-#include <iostream>
 using namespace std;
 
 const int RIGHT = 1;
@@ -13,10 +16,9 @@ const int LEFT = 2;
 const int TOP = 4;
 const int BOTTOM = 8;
 
-bool Game::init() {
-    mPlayer = new Player();
-
-    return true;
+Game::Game(View* view) {
+    this->view = view;
+    mPlayer = new Player(view->createObserver(PLAYER_ID, 2, 5, 10));
 }
 
 void Game::handleEvent(SDL_Event& event) {
@@ -46,7 +48,7 @@ void Game::handleEvent(SDL_Event& event) {
             break;
 
             case SDLK_LEFT:
-            // add ability to turn while crouching
+            // TODO: add ability to turn while crouching
             if (!mPlayer->isCrouching()) mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
             break;
 
@@ -55,12 +57,15 @@ void Game::handleEvent(SDL_Event& event) {
             break;
 
             case SDLK_z:
-            mLevel->addLaser(mPlayer->fireLaser());
+            Laser* laser;
+            laser = mPlayer->fireLaser();
+            laser->addObserver(view->createObserver(LASER_ID, 0));
+            lasers.emplace_back(laser);
             break;
 
 #ifdef DEBUG
             case SDLK_r:
-            mLevel->respawnEnemies();
+            respawnEnemies();
             break;
 #endif
 
@@ -99,18 +104,13 @@ void Game::handleEvent(SDL_Event& event) {
 }
 
 void Game::moveEntities() {
-    vector<AbstractEnemy*> enemies = mLevel->getEnemies();
-    vector<Wall*> walls = mLevel->getWalls();
-    vector<Laser*> lasers = mLevel->getLasers();
-    vector<int> removeList;
-
     // move everything first
-    mPlayer->move(0, mLevel->getHeight(), 0, mLevel->getWidth());
+    mPlayer->move(0, levelHeight, 0, levelWidth);
     for (AbstractEnemy *enemy : enemies) {
-        enemy->move(0, mLevel->getHeight(), 0, mLevel->getWidth());
+        enemy->move(0, levelHeight, 0, levelWidth);
     }
     for (Laser *laser : lasers) {
-        laser->move(0, mLevel->getHeight(), 0, mLevel->getWidth());
+        laser->move(0, levelHeight, 0, levelWidth);
     }
 
     // check for character collisions with walls
@@ -127,52 +127,40 @@ void Game::moveEntities() {
         }
     }
 
-    // check for laser collision with enemies
+    int collision;
     for (int i = 0; i < lasers.size(); i++) {
-        Laser *laser = lasers.at(i);
-        int collision;
+        if (lasers[i] == nullptr) continue;
+        
+        // check for laser collision with enemies
         for (int j = 0; j < enemies.size(); j++) {
-            // TODO: use this for lasers instead of the removeList
             if (enemies[j] == nullptr) continue;
-            collision = checkCollision(laser->getHitBox(), enemies[j]->getHitBox());
+            collision = checkCollision(lasers[i]->getHitBox(), enemies[j]->getHitBox());
             if (collision > 0) {
                 // TODO: make this more interesting
                 enemies[j]->changeHP(-1);
                 if (enemies[j]->getHP() <= 0) {
-                    AbstractEnemy *temp = enemies[j];
+                    AbstractEnemy* temp = enemies[j];
                     enemies[j] = nullptr;
                     delete temp;
                 }
-                removeList.push_back(i);
+                Laser* temp = lasers[i];
+                lasers[i] = nullptr;
+                delete temp;
                 break;
             }
         }
-    }
-
-    int removed = 0;
-    for (int i : removeList) {
-        lasers.erase(lasers.begin() + i - removed);
-        removed++;
-    }
-
-    // check for laser collision with walls
-    removeList.clear();
-    for (int i = 0; i < lasers.size(); i++) {
-        Laser *laser = lasers.at(i);
-        int collision;
+        
+        if (lasers[i] == nullptr) continue;
+        // check for laser collision with walls
         for (Wall *wall : walls) {
-            collision = checkCollision(laser->getHitBox(), wall->getHitBox());
+            collision = checkCollision(lasers[i]->getHitBox(), wall->getHitBox());
             if (collision > 0) {
-                removeList.push_back(i);
+                Laser* temp = lasers[i];
+                lasers[i] = nullptr;
+                delete temp;
                 break;
             }
         }
-    }
-
-    removed = 0;
-    for (int i : removeList) {
-        lasers.erase(lasers.begin() + i - removed);
-        removed++;
     }
 
     // check for player enemy collision
@@ -182,13 +170,39 @@ void Game::moveEntities() {
         if (collision > 0) {
             handlePlayerEnemyCollision(mPlayer, collision);
             if (mPlayer->getHP() <= 0) {
+                // TODO: what do on death
                 cout << "i'm dead" << endl;
             }
         }
     }
 
-    mLevel->updateLasers(lasers);
-    mLevel->updateEnemies(enemies);
+    // refresh the enemy list
+    vector<AbstractEnemy*> newEnemies;
+    for (AbstractEnemy * enemy : enemies) {
+        if (enemy != nullptr) {
+            newEnemies.push_back(enemy);
+        }
+    }
+    enemies = newEnemies;
+
+    // refresh laser list
+    vector<Laser*> newLasers;
+    for (Laser* laser : lasers) {
+        if (laser != nullptr) {
+            newLasers.push_back(laser);
+        }
+    }
+    lasers = newLasers;
+
+    view->clearRenderer();
+    mPlayer->notifyObservers();
+    for (Laser* laser : lasers) {
+        laser->notifyObservers();
+    }
+    for (AbstractEnemy* enemy : enemies) {
+        enemy->notifyObservers();
+    }
+    view->render(walls);
 }
 
 void Game::handlePlayerEnemyCollision(Player* player, int collision) {
@@ -240,22 +254,6 @@ void Game::handleEntityWallCollision(AbstractEntity* entity, Wall* wall, int col
     }
 }
 
-void Game::render(int camX, int camY) {
-    vector<AbstractEnemy*> enemies = mLevel->getEnemies();
-    vector<Wall*> walls = mLevel->getWalls();
-    vector<Laser*> lasers = mLevel->getLasers();
-    mPlayer->render(camX, camY);
-    for (AbstractEnemy* enemy : enemies) {
-        enemy->render(camX, camY);
-    }
-    for (Wall* wall : walls) {
-        wall->render(camX, camY);
-    }
-    for (Laser* laser : lasers) {
-        laser->render(camX, camY);
-    }
-}
-
 int Game::checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2) {
     int collision = 0;
     
@@ -301,15 +299,58 @@ int Game::checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2) {
     return collision;
 }
 
-void Game::setLevel(Level* level) {
-    mLevel = level;
+void Game::initLevel(string path) {
+    levelPath = path;
+    ifstream file {levelPath};
+
+    // read in width and height of level
+    int dim;
+    if (file >> dim) {
+        levelWidth = dim;
+    }
+
+    if (file >> dim) {
+        levelHeight = dim;
+    }
+    view->setMax(new SDL_Point {levelWidth, levelHeight});
+
+    // read wall and enemy spawn information
+    string s;
+    string flag;
+    int x, y, w, h;
+    while (getline(file, s)) {
+        istringstream iss {s};
+
+        iss >> flag;
+        if (flag == "w") { // construct wall
+            iss >> x;
+            iss >> y;
+            iss >> w;
+            iss >> h;
+            walls.emplace_back(new Wall(x, y, w, h));
+        } else if (flag == "mb") {
+            iss >> x;
+            iss >> y;
+            enemies.emplace_back(new MenacingBlob(x, y, view->createObserver(MEN_BLOB_ID, 2)));
+        }
+    }
 }
 
-SDL_Point Game::getFocus() {
-    return SDL_Point {mPlayer->getHitBox().x + (mPlayer->PLAYER_WIDTH - SCREEN_WIDTH) / 2,
-                      mPlayer->getHitBox().y + (mPlayer->PLAYER_HEIGHT - SCREEN_HEIGHT) / 2};
-}
+void Game::respawnEnemies() {
+    enemies.clear();
 
-SDL_Point Game::getMax() {
-    return SDL_Point {mLevel->getWidth(), mLevel->getHeight()};
+    ifstream file {levelPath};
+    string s;
+    string flag;
+    int x, y;
+    while (getline(file, s)) {
+        istringstream iss {s};
+
+        iss >> flag;
+        if (flag == "mb") {
+            iss >> x;
+            iss >> y;
+            enemies.emplace_back(new MenacingBlob(x, y, view->createObserver(MEN_BLOB_ID, 2)));
+        }
+    }
 }

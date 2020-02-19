@@ -3,10 +3,12 @@
 
 #include <abstractentity.h>
 
+class Observer;
+
 class AbstractEnemy: public AbstractEntity {
     public:
     AbstractEnemy(int width, int height, int maxSpeed, int x, int y,
-                  int totalHP, int maxWalkingFrame);
+                  int totalHP, Observer* observer);
     ~AbstractEnemy();
 };
 

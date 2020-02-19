@@ -1,8 +1,10 @@
-#include <abstractentity.h>
 #include <abstractenemy.h>
+#include <observer.h>
 
 AbstractEnemy::AbstractEnemy(int width, int height, int maxSpeed, int x, int y,
-                             int totalHP, int maxWalkingFrame): 
-    AbstractEntity(width, height, maxSpeed, x, y, totalHP, maxWalkingFrame) {}
+                             int totalHP, Observer* observer): 
+    AbstractEntity(width, height, maxSpeed, x, y, totalHP) {
+        addObserver(observer);
+    }
 
 AbstractEnemy::~AbstractEnemy() {}

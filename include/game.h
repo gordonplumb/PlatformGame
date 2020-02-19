@@ -6,24 +6,33 @@
 
 class Player;
 class AbstractEntity;
+class AbstractEnemy;
 class Wall;
-class Level;
+class Laser;
+class View;
 
 class Game {
+    View* view;
     Player* mPlayer;
-    // std::vector<AbstractEnemy*> mEnemies;
-    Level* mLevel;
+    std::vector<Wall*> walls;
+    std::vector<AbstractEnemy*> enemies;
+    std::vector<Laser*> lasers;
+    std::string levelPath;
+    int levelWidth;
+    int levelHeight;
 
     int checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2);
     void handlePlayerEnemyCollision(Player* player, int collision);
     void handleEntityWallCollision(AbstractEntity* entity, Wall* wall, int collision);
+    void respawnEnemies();
 
     public:
-    bool init();
+    Game(View* view);
+    ~Game();
+
     void handleEvent(SDL_Event& event);
     void moveEntities();
-    void render(int camX, int camY);
-    void setLevel(Level* level);
+    void initLevel(std::string path);
 
     SDL_Point getFocus();
     SDL_Point getMax();

@@ -1,8 +1,8 @@
-#include <SDL2/SDL.h>
 #include <abstractentity.h>
+#include <observer.h>
 
 AbstractEntity::AbstractEntity(int width, int height, int maxSpeed, int posX,
-                               int posY, int totalHP, int maxWalkingFrame) {
+                               int posY, int totalHP) {
     mWidth = width;
     mHeight = height;
     mMaxSpeed = maxSpeed;
@@ -10,9 +10,12 @@ AbstractEntity::AbstractEntity(int width, int height, int maxSpeed, int posX,
     mPosY = posY;
     mTotalHP = totalHP;
     mHP = totalHP;
-    mMaxWalkingFrame = maxWalkingFrame;
     mHitBox.w = width;
     mHitBox.h = height;
+}
+
+AbstractEntity::~AbstractEntity() {
+    delete observer;
 }
 
 void AbstractEntity::changePosX(int amount) {
@@ -35,6 +38,10 @@ bool AbstractEntity::isCrouching() {
     return mCrouching;
 }
 
+bool AbstractEntity::isLookingUp() {
+    return mLookingUp;
+}
+
 void AbstractEntity::setJump(bool canJump) {
     mCanJump = canJump;
     if (canJump) {
@@ -53,6 +60,14 @@ void AbstractEntity::setLookingUp(bool lookingUp) {
 void AbstractEntity::reverse() {
     mPosX -= mVelX;
     mPosY -= mVelY;
+}
+
+void AbstractEntity::addObserver(Observer* observer) {
+    this->observer = observer;
+}
+
+void AbstractEntity::notifyObservers() {
+    observer->notify(mPosX, mPosY, mForward, mCrouching, mLookingUp, mVelX != 0);
 }
 
 int AbstractEntity::getVelX() {

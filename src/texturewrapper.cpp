@@ -1,12 +1,9 @@
-#include <texturewrapper.h>
-#include <SDL2/SDL.h>
 #include <string>
 #include <iostream>
+#include <texturewrapper.h>
+#include <SDL2/SDL.h>
 
 using namespace std;
-
-// this works but isn't right
-extern SDL_Renderer* gRenderer;
 
 TextureWrapper::TextureWrapper() {
     mTexture = nullptr;
@@ -18,7 +15,8 @@ TextureWrapper::~TextureWrapper() {
     free();
 }
 
-bool TextureWrapper::loadTexture(string path) {
+bool TextureWrapper::init(string path, SDL_Renderer* renderer,
+                          int height, int width) {
     free();
     SDL_Texture* texture = nullptr;
 
@@ -27,7 +25,7 @@ bool TextureWrapper::loadTexture(string path) {
         cerr << "Unable to load " << path << ", SDL Error: " << SDL_GetError() << endl;
     } else {
         SDL_SetColorKey(surface, SDL_TRUE, SDL_MapRGB(surface->format, 0xFF, 0xFF, 0xFF));
-        texture = SDL_CreateTextureFromSurface(gRenderer, surface);
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
 
         if (texture == nullptr) {
             cerr << "Unable to create texture from " << path << ", SDL Error: ";
@@ -35,6 +33,20 @@ bool TextureWrapper::loadTexture(string path) {
         } else {
             mWidth = surface->w;
             mHeight = surface->h;
+            
+            // set clip width and height if they weren't provided
+            if (height == 0) height = mHeight;
+            if (width == 0) width = mWidth;
+
+            // load clip dimensions
+            int row = mHeight / height;
+            int col = mWidth / width;
+            for (int i = 0; i < row; i++) {
+                for (int j = 0; j < col; j++) {
+                    SDL_Rect* clip = new SDL_Rect {width * j, height * i, width, height};
+                    clips.emplace_back(clip);
+                }
+            }
         }
 
         SDL_FreeSurface(surface);
@@ -45,7 +57,7 @@ bool TextureWrapper::loadTexture(string path) {
 }
 
 void TextureWrapper::free() {
-    if(mTexture != nullptr) {
+    if (mTexture != nullptr) {
         SDL_DestroyTexture(mTexture);
         mTexture = nullptr;
         mWidth = 0;
@@ -53,7 +65,8 @@ void TextureWrapper::free() {
     }
 }
 
-void TextureWrapper::render(int x, int y, int camX, int camY, SDL_Rect* clip, double angle,
+void TextureWrapper::render(SDL_Renderer* renderer, int x, int y, int camX,
+                            int camY, SDL_Rect* clip, double angle,
                             SDL_Point* centre, SDL_RendererFlip flip) {
     SDL_Rect renderRect = {x - camX, y - camY, mWidth, mHeight};
 
@@ -62,7 +75,7 @@ void TextureWrapper::render(int x, int y, int camX, int camY, SDL_Rect* clip, do
         renderRect.h = clip->h;
     }
 
-    SDL_RenderCopyEx(gRenderer, mTexture, clip, &renderRect, angle, centre, flip);
+    SDL_RenderCopyEx(renderer, mTexture, clip, &renderRect, angle, centre, flip);
 }
 
 void TextureWrapper::setColour(Uint8 red, Uint8 green, Uint8 blue) {
@@ -75,4 +88,8 @@ int TextureWrapper::getWidth() {
 
 int TextureWrapper::getHeight() {
     return mHeight;
+}
+
+SDL_Rect* TextureWrapper::getClip(int index) {
+    return clips.at(index);
 }
