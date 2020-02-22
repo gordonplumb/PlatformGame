@@ -7,6 +7,8 @@
 #include <gameconstants.h>
 #include <texturewrapper.h>
 #include <observer.h>
+#include <movingobserver.h>
+#include <playerstatusobserver.h>
 #include <wall.h>
 
 using namespace std;
@@ -30,6 +32,7 @@ void View::loadTextures() {
     textures.emplace(LASER_ID, loadTexture("media/laser20x8.bmp"));
     textures.emplace(WALL_ID, loadTexture("media/wall.bmp"));
     textures.emplace(MEN_BLOB_ID, loadTexture("media/menacingblob.bmp", 30, 30));
+    textures.emplace(HEART_ID, loadTexture("media/heart.bmp"));
 }
 
 bool View::init() {
@@ -83,11 +86,18 @@ void View::clearRenderer() {
     SDL_RenderClear(renderer);
 }
 
-Observer* View::createObserver(int id, int maxWalkFrame, int xOffset, int yOffset) {
-    Observer* observer = new Observer(id, this, textures[id], maxWalkFrame,
-                                      xOffset, yOffset);
+Observer* View::createMovingObserver(int id, int maxWalkFrame, int xOffset, int yOffset) {
+    Observer* observer = new MovingObserver(id, this, textures[id], maxWalkFrame,
+                                            xOffset, yOffset);
     observers.emplace_back(observer);
     
+    return observer;
+}
+
+Observer* View::createPlayerStatusObserver() {
+    Observer* observer = new PlayerStatusObserver(this, textures[HEART_ID]);
+    observers.emplace_back(observer);
+
     return observer;
 }
 

@@ -33,6 +33,8 @@ void Laser::move(int top, int bot, int right, int left) {
 }
 
 void Laser::notifyObservers() {
-    observer->notify(mPosX, mPosY, mForward, mCrouching, mLookingUp,
-                     mVelX != 0, angle, centre);
+    for (Observer* observer : observers) {
+       observer->notify(mHP, mPosX, mPosY, mForward, mCrouching, mLookingUp,
+                     mVelX != 0, angle, centre); 
+    }
 }

@@ -34,8 +34,10 @@ void Player::move(int top, int bot, int left, int right) {
 void Player::notifyObservers() {
     SDL_Point* centre = new SDL_Point {mHitBox.x + mWidth / 2,
                                        mHitBox.y + mHeight / 2};
-    observer->notify(mPosX, mPosY, mForward, mCrouching, mLookingUp, mVelX != 0,
-                     0, centre);
+    for (Observer* observer : observers) {
+        observer->notify(mHP, mPosX, mPosY, mForward, mCrouching, mLookingUp,
+                         mVelX != 0, 0, centre);
+    }
 }
 
 Laser* Player::fireLaser() {

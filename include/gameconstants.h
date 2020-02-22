@@ -11,4 +11,7 @@ const int LASER_ID = 1;
 const int WALL_ID = 5;
 const int MEN_BLOB_ID = 10;
 
+// other ids
+const int HEART_ID = 20;
+
 #endif

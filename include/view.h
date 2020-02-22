@@ -30,8 +30,9 @@ class View {
     bool init();
     void render(std::vector<Wall*> walls);
     void clearRenderer();
-    Observer* createObserver(int id, int maxWalkFrame, int xOffset = 0,
-                             int yOffset = 0);
+    Observer* createMovingObserver(int id, int maxWalkFrame, int xOffset = 0,
+                                   int yOffset = 0);
+    Observer* createPlayerStatusObserver();
     void removeObserver(Observer* observer);
 
     void updateCamera(SDL_Point* point);

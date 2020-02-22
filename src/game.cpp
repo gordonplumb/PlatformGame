@@ -18,7 +18,8 @@ const int BOTTOM = 8;
 
 Game::Game(View* view) {
     this->view = view;
-    mPlayer = new Player(view->createObserver(PLAYER_ID, 2, 5, 10));
+    mPlayer = new Player(view->createMovingObserver(PLAYER_ID, 2, 5, 10));
+    mPlayer->addObserver(view->createPlayerStatusObserver());
 }
 
 void Game::handleEvent(SDL_Event& event) {
@@ -59,7 +60,7 @@ void Game::handleEvent(SDL_Event& event) {
             case SDLK_z:
             Laser* laser;
             laser = mPlayer->fireLaser();
-            laser->addObserver(view->createObserver(LASER_ID, 0));
+            laser->addObserver(view->createMovingObserver(LASER_ID, 0));
             lasers.emplace_back(laser);
             break;
 
@@ -331,7 +332,7 @@ void Game::initLevel(string path) {
         } else if (flag == "mb") {
             iss >> x;
             iss >> y;
-            enemies.emplace_back(new MenacingBlob(x, y, view->createObserver(MEN_BLOB_ID, 2)));
+            enemies.emplace_back(new MenacingBlob(x, y, view->createMovingObserver(MEN_BLOB_ID, 2)));
         }
     }
 }
@@ -350,7 +351,7 @@ void Game::respawnEnemies() {
         if (flag == "mb") {
             iss >> x;
             iss >> y;
-            enemies.emplace_back(new MenacingBlob(x, y, view->createObserver(MEN_BLOB_ID, 2)));
+            enemies.emplace_back(new MenacingBlob(x, y, view->createMovingObserver(MEN_BLOB_ID, 2)));
         }
     }
 }

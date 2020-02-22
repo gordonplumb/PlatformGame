@@ -1,6 +1,7 @@
 #ifndef _ABSTRACT_ENTITY_
 #define _ABSTRACT_ENTITY_
 
+#include <vector>
 #include <SDL2/SDL.h>
 
 class Observer;
@@ -24,7 +25,7 @@ class AbstractEntity {
     bool mCanJump = false;
 
     SDL_Rect mHitBox;
-    Observer* observer;
+    std::vector<Observer*> observers;
 
     public:
     AbstractEntity(int width, int height, int maxSpeed, int posX,

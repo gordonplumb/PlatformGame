@@ -15,7 +15,9 @@ AbstractEntity::AbstractEntity(int width, int height, int maxSpeed, int posX,
 }
 
 AbstractEntity::~AbstractEntity() {
-    delete observer;
+    for (Observer* observer : observers) {
+        delete observer;
+    }
 }
 
 void AbstractEntity::changePosX(int amount) {
@@ -63,11 +65,14 @@ void AbstractEntity::reverse() {
 }
 
 void AbstractEntity::addObserver(Observer* observer) {
-    this->observer = observer;
+    this->observers.push_back(observer);
 }
 
 void AbstractEntity::notifyObservers() {
-    observer->notify(mPosX, mPosY, mForward, mCrouching, mLookingUp, mVelX != 0);
+    for (Observer* observer : observers) {
+        observer->notify(mHP, mPosX, mPosY, mForward, mCrouching, mLookingUp,
+                         mVelX != 0);
+    }
 }
 
 int AbstractEntity::getVelX() {
