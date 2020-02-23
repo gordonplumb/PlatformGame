@@ -22,131 +22,72 @@ Game::Game(View* view) {
     timer = new Timer();
     mPlayer = new Player(view->createMovingObserver(PLAYER_ID, 2, 5, 10));
     mPlayer->addObserver(view->createPlayerStatusObserver());
-    memset(prevKeyState, 0, sizeof(uint8_t) * SDL_NUM_SCANCODES);
 }
 
-void Game::handleEvent(SDL_Event& event) {
-    const uint8_t* state = SDL_GetKeyboardState(nullptr);
-    bool wasPaused = false;
+void Game::playerJump() {
+    if (mPlayer->canJump() && !mPlayer->isCrouching()) {
+        mPlayer->changeVelY(-15);
+        mPlayer->setJump(false);
+    }
+}
 
-    if (timer->isPaused()) {
-        // unpause
-        if (state[SDL_SCANCODE_P] == 1 && prevKeyState[SDL_SCANCODE_P] == 0) {
-            timer->unpause();
-            wasPaused = true;
+void Game::playerLookUp(bool isLookingUp) {
+    mPlayer->setLookingUp(isLookingUp);
+}
+
+void Game::playerCrouch(bool isCrouching, bool left, bool right) {
+    if (isCrouching) {
+        if (left) {
+            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
+        }
+        if (right) {
+            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
         }
     } else {
-        // pause
-        if (state[SDL_SCANCODE_P] == 1 && prevKeyState[SDL_SCANCODE_P] == 0) {
-            timer->pause();
-            
-            // resetting all actions that result from a held key 
-            if (state[SDL_SCANCODE_LEFT] == 1
-                && prevKeyState[SDL_SCANCODE_LEFT]) {
-                if (!mPlayer->isCrouching()) {
-                    mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
-                }
-            }
-            if (state[SDL_SCANCODE_RIGHT] == 1
-                && prevKeyState[SDL_SCANCODE_RIGHT]) {
-                if (!mPlayer->isCrouching()) {
-                    mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
-                }
-            }
-            if (state[SDL_SCANCODE_UP] == 1) {
-                mPlayer->setLookingUp(false);
-            }
-            if (state[SDL_SCANCODE_DOWN] == 1) {
-                mPlayer->setCrouch(false);
-            }
+        if (left) {
+            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
         }
-
-        // jump
-        // TODO: remove ability to jump after walking off a platform
-        if (state[SDL_SCANCODE_SPACE] == 1
-            && prevKeyState[SDL_SCANCODE_SPACE] == 0) {
-            if (mPlayer->canJump() && !mPlayer->isCrouching()) {
-                mPlayer->changeVelY(-15);
-                mPlayer->setJump(false);
-            }
+        if (right) {
+            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
         }
-
-        // look up
-        if (state[SDL_SCANCODE_UP] == 1 && prevKeyState[SDL_SCANCODE_UP] == 0) {
-            mPlayer->setLookingUp(true);
-        } else if (state[SDL_SCANCODE_UP] == 0 && prevKeyState[SDL_SCANCODE_UP] == 1) {
-            mPlayer->setLookingUp(false);
-        }
-
-        // crouch
-        if (state[SDL_SCANCODE_DOWN] == 1
-            && prevKeyState[SDL_SCANCODE_DOWN] == 0) {
-            if (prevKeyState[SDL_SCANCODE_LEFT] == 1) {
-                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
-            }
-            if (prevKeyState[SDL_SCANCODE_RIGHT] == 1) {
-                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
-            }
-            mPlayer->setCrouch(true);
-        } else if (state[SDL_SCANCODE_DOWN] == 0
-            && prevKeyState[SDL_SCANCODE_DOWN] == 1) {
-            if (prevKeyState[SDL_SCANCODE_LEFT] == 1) {
-                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
-            }
-            if (prevKeyState[SDL_SCANCODE_RIGHT] == 1) {
-                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
-            }
-            mPlayer->setCrouch(false);
-        }
-
-        // left
-        if (state[SDL_SCANCODE_LEFT] == 1 && prevKeyState[SDL_SCANCODE_LEFT] == 0) {
-            if (!mPlayer->isCrouching()) {
-                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
-            }
-        } else if (state[SDL_SCANCODE_LEFT] == 0
-            && prevKeyState[SDL_SCANCODE_LEFT] == 1) {
-            if (!mPlayer->isCrouching()) {
-                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
-            }
-        }
-
-        // right
-        if (state[SDL_SCANCODE_RIGHT] == 1
-            && prevKeyState[SDL_SCANCODE_RIGHT] == 0) {
-            if (!mPlayer->isCrouching()) {
-                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
-            }
-        } else if (state[SDL_SCANCODE_RIGHT] == 0
-            && prevKeyState[SDL_SCANCODE_RIGHT] == 1) {
-            if (!mPlayer->isCrouching()) {
-                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
-            }
-        }
-
-        // laser
-        if (state[SDL_SCANCODE_Z] == 1 && prevKeyState[SDL_SCANCODE_Z] == 0) {
-            Laser* laser;
-            laser = mPlayer->fireLaser();
-            laser->addObserver(view->createMovingObserver(LASER_ID, 0));
-            lasers.emplace_back(laser);
-        }
-#ifdef DEBUG
-        if (state[SDL_SCANCODE_R] == 1 && prevKeyState[SDL_SCANCODE_R] == 0) {
-            respawnEnemies();
-        }
-#endif
     }
+    mPlayer->setCrouch(isCrouching);
+}
 
-    // update previous key state
-    memcpy(prevKeyState, state, sizeof(uint8_t) * SDL_NUM_SCANCODES);
-    if (wasPaused) {
-        // set the key state for held key actions to 0 so next handleEvent call
-        // will pick them up as new key presses
-        prevKeyState[SDL_SCANCODE_UP] = 0;
-        prevKeyState[SDL_SCANCODE_DOWN] = 0;
-        prevKeyState[SDL_SCANCODE_LEFT] = 0;
-        prevKeyState[SDL_SCANCODE_RIGHT] = 0;
+void Game::playerMove(bool stop, bool forward) {
+    int multiplier = forward ? 1 : -1;
+    if (stop) {
+        multiplier *= -1;
+    }
+    if (!mPlayer->isCrouching()) {
+        mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * multiplier);
+    }
+}
+
+void Game::playerShoot() {
+    Laser* laser;
+    laser = mPlayer->fireLaser();
+    laser->addObserver(view->createMovingObserver(LASER_ID, 0));
+    lasers.emplace_back(laser);
+}
+
+void Game::resetPlayerActions(bool left, bool right, bool up, bool down) {
+    // resetting all actions that result from a held key 
+    if (left) {
+        if (!mPlayer->isCrouching()) {
+            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
+        }
+    }
+    if (right) {
+        if (!mPlayer->isCrouching()) {
+            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
+        }
+    }
+    if (up) {
+        mPlayer->setLookingUp(false);
+    }
+    if (down) {
+        mPlayer->setCrouch(false);
     }
 }
 
@@ -408,4 +349,16 @@ void Game::respawnEnemies() {
             enemies.emplace_back(new MenacingBlob(x, y, view->createMovingObserver(MEN_BLOB_ID, 2)));
         }
     }
+}
+
+void Game::pause() {
+    timer->pause();
+}
+
+void Game::unpause() {
+    timer->unpause();
+}
+
+bool Game::isPaused() {
+    return timer->isPaused();
 }

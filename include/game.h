@@ -23,23 +23,28 @@ class Game {
     int levelWidth;
     int levelHeight;
     uint32_t time = 0;
-    uint8_t prevKeyState[SDL_NUM_SCANCODES];
 
     int checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2);
     void handlePlayerEnemyCollision(Player* player, int collision);
     void handleEntityWallCollision(AbstractEntity* entity, Wall* wall, int collision);
-    void respawnEnemies();
 
     public:
     Game(View* view);
     ~Game();
 
-    void handleEvent(SDL_Event& event);
+    void playerJump();
+    void playerLookUp(bool isLookingUp);
+    void playerCrouch(bool isCrouching, bool left, bool right);
+    void playerMove(bool stop, bool forward);
+    void playerShoot();
+    void resetPlayerActions(bool left, bool right, bool up, bool down);
     void moveEntities();
     void initLevel(std::string path);
+    void respawnEnemies();
 
-    SDL_Point getFocus();
-    SDL_Point getMax();
+    void pause();
+    void unpause();
+    bool isPaused();
 };
 
 #endif
