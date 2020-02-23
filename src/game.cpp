@@ -22,91 +22,131 @@ Game::Game(View* view) {
     timer = new Timer();
     mPlayer = new Player(view->createMovingObserver(PLAYER_ID, 2, 5, 10));
     mPlayer->addObserver(view->createPlayerStatusObserver());
+    memset(prevKeyState, 0, sizeof(uint8_t) * SDL_NUM_SCANCODES);
 }
 
 void Game::handleEvent(SDL_Event& event) {
-    if (event.type == SDL_KEYDOWN && event.key.repeat == 0) {
-        const Uint8 *state = SDL_GetKeyboardState(nullptr);
-        switch(event.key.keysym.sym) {
-            case SDLK_SPACE:
-            // TODO: remove ability to jump after walking off a platform
+    const uint8_t* state = SDL_GetKeyboardState(nullptr);
+    bool wasPaused = false;
+
+    if (timer->isPaused()) {
+        // unpause
+        if (state[SDL_SCANCODE_P] == 1 && prevKeyState[SDL_SCANCODE_P] == 0) {
+            timer->unpause();
+            wasPaused = true;
+        }
+    } else {
+        // pause
+        if (state[SDL_SCANCODE_P] == 1 && prevKeyState[SDL_SCANCODE_P] == 0) {
+            timer->pause();
+            
+            // resetting all actions that result from a held key 
+            if (state[SDL_SCANCODE_LEFT] == 1
+                && prevKeyState[SDL_SCANCODE_LEFT]) {
+                if (!mPlayer->isCrouching()) {
+                    mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
+                }
+            }
+            if (state[SDL_SCANCODE_RIGHT] == 1
+                && prevKeyState[SDL_SCANCODE_RIGHT]) {
+                if (!mPlayer->isCrouching()) {
+                    mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
+                }
+            }
+            if (state[SDL_SCANCODE_UP] == 1) {
+                mPlayer->setLookingUp(false);
+            }
+            if (state[SDL_SCANCODE_DOWN] == 1) {
+                mPlayer->setCrouch(false);
+            }
+        }
+
+        // jump
+        // TODO: remove ability to jump after walking off a platform
+        if (state[SDL_SCANCODE_SPACE] == 1
+            && prevKeyState[SDL_SCANCODE_SPACE] == 0) {
             if (mPlayer->canJump() && !mPlayer->isCrouching()) {
                 mPlayer->changeVelY(-15);
                 mPlayer->setJump(false);
             }
-            break;
+        }
 
-            case SDLK_UP:
+        // look up
+        if (state[SDL_SCANCODE_UP] == 1 && prevKeyState[SDL_SCANCODE_UP] == 0) {
             mPlayer->setLookingUp(true);
-            break;
+        } else if (state[SDL_SCANCODE_UP] == 0 && prevKeyState[SDL_SCANCODE_UP] == 1) {
+            mPlayer->setLookingUp(false);
+        }
 
-            case SDLK_DOWN:
-            if (state[SDL_SCANCODE_LEFT]) {
+        // crouch
+        if (state[SDL_SCANCODE_DOWN] == 1
+            && prevKeyState[SDL_SCANCODE_DOWN] == 0) {
+            if (prevKeyState[SDL_SCANCODE_LEFT] == 1) {
                 mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
             }
-            if (state[SDL_SCANCODE_RIGHT]) {
+            if (prevKeyState[SDL_SCANCODE_RIGHT] == 1) {
                 mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
             }
             mPlayer->setCrouch(true);
-            break;
+        } else if (state[SDL_SCANCODE_DOWN] == 0
+            && prevKeyState[SDL_SCANCODE_DOWN] == 1) {
+            if (prevKeyState[SDL_SCANCODE_LEFT] == 1) {
+                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
+            }
+            if (prevKeyState[SDL_SCANCODE_RIGHT] == 1) {
+                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
+            }
+            mPlayer->setCrouch(false);
+        }
 
-            case SDLK_LEFT:
-            // TODO: add ability to turn while crouching
-            if (!mPlayer->isCrouching()) mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
-            break;
+        // left
+        if (state[SDL_SCANCODE_LEFT] == 1 && prevKeyState[SDL_SCANCODE_LEFT] == 0) {
+            if (!mPlayer->isCrouching()) {
+                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
+            }
+        } else if (state[SDL_SCANCODE_LEFT] == 0
+            && prevKeyState[SDL_SCANCODE_LEFT] == 1) {
+            if (!mPlayer->isCrouching()) {
+                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
+            }
+        }
 
-            case SDLK_RIGHT:
-            if (!mPlayer->isCrouching()) mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
-            break;
+        // right
+        if (state[SDL_SCANCODE_RIGHT] == 1
+            && prevKeyState[SDL_SCANCODE_RIGHT] == 0) {
+            if (!mPlayer->isCrouching()) {
+                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
+            }
+        } else if (state[SDL_SCANCODE_RIGHT] == 0
+            && prevKeyState[SDL_SCANCODE_RIGHT] == 1) {
+            if (!mPlayer->isCrouching()) {
+                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
+            }
+        }
 
-            case SDLK_z:
+        // laser
+        if (state[SDL_SCANCODE_Z] == 1 && prevKeyState[SDL_SCANCODE_Z] == 0) {
             Laser* laser;
             laser = mPlayer->fireLaser();
             laser->addObserver(view->createMovingObserver(LASER_ID, 0));
             lasers.emplace_back(laser);
-            break;
-
-            case SDLK_p:
-            // TODO: pausing
-            break;
-
+        }
 #ifdef DEBUG
-            case SDLK_r:
+        if (state[SDL_SCANCODE_R] == 1 && prevKeyState[SDL_SCANCODE_R] == 0) {
             respawnEnemies();
-            break;
+        }
 #endif
+    }
 
-            default:
-            break;
-        }
-    } else if (event.type == SDL_KEYUP && event.key.repeat == 0) {
-        const Uint8 *state = SDL_GetKeyboardState(nullptr);
-        switch (event.key.keysym.sym) {
-            case SDLK_UP:
-            mPlayer->setLookingUp(false);
-            break;
-
-            case SDLK_DOWN:
-            if (state[SDL_SCANCODE_LEFT]) {
-                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
-            }
-            if (state[SDL_SCANCODE_RIGHT]) {
-                mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
-            }
-            mPlayer->setCrouch(false);
-            break;
-
-            case SDLK_LEFT:
-            if (!mPlayer->isCrouching()) mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
-            break;
-
-            case SDLK_RIGHT:
-            if (!mPlayer->isCrouching()) mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
-            break;
-
-            default:
-            break;
-        }
+    // update previous key state
+    memcpy(prevKeyState, state, sizeof(uint8_t) * SDL_NUM_SCANCODES);
+    if (wasPaused) {
+        // set the key state for held key actions to 0 so next handleEvent call
+        // will pick them up as new key presses
+        prevKeyState[SDL_SCANCODE_UP] = 0;
+        prevKeyState[SDL_SCANCODE_DOWN] = 0;
+        prevKeyState[SDL_SCANCODE_LEFT] = 0;
+        prevKeyState[SDL_SCANCODE_RIGHT] = 0;
     }
 }
 

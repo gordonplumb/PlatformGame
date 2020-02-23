@@ -23,6 +23,7 @@ class Game {
     int levelWidth;
     int levelHeight;
     uint32_t time = 0;
+    uint8_t prevKeyState[SDL_NUM_SCANCODES];
 
     int checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2);
     void handlePlayerEnemyCollision(Player* player, int collision);
