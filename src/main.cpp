@@ -10,7 +10,6 @@ View* view;
 
 void close() {
     delete view;
-    SDL_Quit();
 }
 
 int main(int argc, char** argv) {

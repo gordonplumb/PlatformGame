@@ -13,5 +13,6 @@ const int MEN_BLOB_ID = 10;
 
 // other ids
 const int HEART_ID = 20;
+const int TIMER_ID = 21;
 
 #endif

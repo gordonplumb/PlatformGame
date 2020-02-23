@@ -2,6 +2,7 @@
 #include <iostream>
 #include <texturewrapper.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 using namespace std;
 
@@ -18,17 +19,17 @@ TextureWrapper::~TextureWrapper() {
 bool TextureWrapper::init(string path, SDL_Renderer* renderer,
                           int height, int width) {
     free();
-    SDL_Texture* texture = nullptr;
 
     SDL_Surface* surface = SDL_LoadBMP(path.c_str());
     if (surface == nullptr) {
-        cerr << "Unable to load " << path << ", SDL Error: " << SDL_GetError() << endl;
+        cerr << "Unable to load " << path << ", " << SDL_GetError() << endl;
     } else {
-        SDL_SetColorKey(surface, SDL_TRUE, SDL_MapRGB(surface->format, 0xFF, 0xFF, 0xFF));
-        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_SetColorKey(surface, SDL_TRUE,
+                        SDL_MapRGB(surface->format, 0xFF, 0xFF, 0xFF));
+        mTexture = SDL_CreateTextureFromSurface(renderer, surface);
 
-        if (texture == nullptr) {
-            cerr << "Unable to create texture from " << path << ", SDL Error: ";
+        if (mTexture == nullptr) {
+            cerr << "Unable to create texture from " << path << ", ";
             cerr << SDL_GetError() << endl;
         } else {
             mWidth = surface->w;
@@ -43,7 +44,8 @@ bool TextureWrapper::init(string path, SDL_Renderer* renderer,
             int col = mWidth / width;
             for (int i = 0; i < row; i++) {
                 for (int j = 0; j < col; j++) {
-                    SDL_Rect* clip = new SDL_Rect {width * j, height * i, width, height};
+                    SDL_Rect* clip = new SDL_Rect {width * j, height * i,
+                                                   width, height};
                     clips.emplace_back(clip);
                 }
             }
@@ -52,8 +54,33 @@ bool TextureWrapper::init(string path, SDL_Renderer* renderer,
         SDL_FreeSurface(surface);
     }
 
-    mTexture = texture;
-    return texture != nullptr;
+    return mTexture != nullptr;
+}
+
+bool TextureWrapper::initFromText(std::string textureText, TTF_Font* font,
+                                  SDL_Renderer* renderer, SDL_Color textColour) {
+    free();
+
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, textureText.c_str(),
+                                                    textColour);
+    
+    if (textSurface == nullptr) {
+        cerr << "Unable to render text surface " << TTF_GetError() << endl;
+    } else {
+        mTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+
+        if (mTexture == nullptr) {
+            cerr << "Failed to create texture from rendered text ";
+            cerr << TTF_GetError() << endl;
+        } else {
+            mWidth = textSurface->w;
+            mHeight = textSurface->h;
+        }
+
+        SDL_FreeSurface(textSurface);
+    }
+
+    return mTexture != nullptr;
 }
 
 void TextureWrapper::free() {

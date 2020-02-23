@@ -5,6 +5,8 @@
 #include <vector>
 #include <SDL2/SDL.h>
 
+typedef struct _TTF_Font TTF_Font;
+
 class TextureWrapper {
     SDL_Texture* mTexture;
     std::vector<SDL_Rect*> clips;
@@ -18,6 +20,9 @@ class TextureWrapper {
 
     bool init(std::string path, SDL_Renderer* renderer, int height = 0,
               int width = 0);
+
+    bool initFromText(std::string textureText, TTF_Font* font,
+                      SDL_Renderer* renderer, SDL_Color textColour);
 
     void free();
 

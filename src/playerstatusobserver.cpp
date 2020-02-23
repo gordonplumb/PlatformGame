@@ -16,6 +16,6 @@ void PlayerStatusObserver::notify(int hp, int xPos, int yPos, bool forward,
                                   double angle, SDL_Point* centre) {
     SDL_Rect* camera = view->getCamera();
     for (int i = 0; i < hp; i++) {
-        texture->render(view->getRenderer(), 5 + 30 * i, 5, camera->x, camera->y);
+        texture->render(view->getRenderer(), 5 + 30 * i, 5, 0, 0);
     }
 }

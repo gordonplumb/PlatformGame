@@ -2,8 +2,11 @@
 #include <map>
 #include <vector>
 #include <algorithm>
-#include <view.h>
+#include <string>
+#include <sstream>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+#include <view.h>
 #include <gameconstants.h>
 #include <texturewrapper.h>
 #include <observer.h>
@@ -16,8 +19,14 @@ using namespace std;
 View::View() {}
 
 View::~View() {
-    SDL_DestroyWindow(window);
+    for (auto const& pair : textures) {
+        pair.second->free();
+    }
+    TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    TTF_Quit();
+    SDL_Quit();
 }
 
 TextureWrapper* View::loadTexture(string path, int height, int width) {
@@ -33,31 +42,48 @@ void View::loadTextures() {
     textures.emplace(WALL_ID, loadTexture("media/wall.bmp"));
     textures.emplace(MEN_BLOB_ID, loadTexture("media/menacingblob.bmp", 30, 30));
     textures.emplace(HEART_ID, loadTexture("media/heart.bmp"));
+
+    TextureWrapper* timer = new TextureWrapper();
+    timer->initFromText("0", font, renderer, *fontColour);
+    textures.emplace(TIMER_ID, timer);
 }
 
 bool View::init() {
     bool success = false;
 
-    if (SDL_Init( SDL_INIT_VIDEO ) < 0) {
-        cerr << "SDL could not initialize, SDL_Error " << SDL_GetError() << endl;
+    if (SDL_Init( SDL_INIT_VIDEO ) == -1) {
+        cerr << "SDL failed to initialize, SDL_Error " << SDL_GetError() << endl;
+    } else if (TTF_Init() == -1) {
+        cerr << "TTF failed to initialize " << TTF_GetError() << endl;
     } else {
+        // initialization of SDL and TTF libraries completed
         window = SDL_CreateWindow("tbdGame", SDL_WINDOWPOS_UNDEFINED,
-                                   SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH,
-                                   SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+            SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT,
+            SDL_WINDOW_SHOWN);
 
         if (window == nullptr) {
-            cerr << "Window could not be created, SDL_Error " << SDL_GetError() << endl;
+            cerr << "Window could not be created " << SDL_GetError() << endl;
         } else {
-            renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+            renderer = SDL_CreateRenderer(window, -1,
+                SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+
+            // load the font with point size 20
+            font = TTF_OpenFont("media/OpenSans-Regular.ttf", 20);
 
             if (renderer == nullptr) {
-                cerr << "Renderer could not be created, SDL Error: ";
-                cerr << SDL_GetError() << endl;
+                cerr << "Renderer was not created "<< SDL_GetError() << endl;
+            } else if (font == nullptr) {
+                cerr << "Font was not created " << TTF_GetError() << endl;
             } else {
-                SDL_SetRenderDrawColor(renderer, 192, 192, 192, SDL_ALPHA_OPAQUE);
-                loadTextures();
+                // set colours for screen and font
+                SDL_SetRenderDrawColor(renderer, 192, 192, 192,
+                    SDL_ALPHA_OPAQUE);
+                fontColour = new SDL_Color {0, 0, 0};
 
+                // construct the camera for scrolling
                 camera = new SDL_Rect {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+                
+                loadTextures();
 
                 success = true;
             }
@@ -68,6 +94,7 @@ bool View::init() {
 }
 
 void View::render(vector<Wall*> walls) {
+    // render walls
     TextureWrapper* wallTexture = textures[WALL_ID];
     for (Wall* wall : walls) {
         SDL_Rect rect = wall->getHitBox();
@@ -75,10 +102,13 @@ void View::render(vector<Wall*> walls) {
         for (int i = 0; i < rect.h / DIM; i++) {
             for (int j = 0; j < rect.w / DIM; j++) {
                 wallTexture->render(renderer, rect.x + j * DIM,
-                                    rect.y + i * DIM, camera->x, camera->y);
+                    rect.y + i * DIM, camera->x, camera->y);
             }
         }
     }
+
+    // render time string
+    textures[TIMER_ID]->render(renderer, SCREEN_WIDTH - 45, 5, 0, 0);
     SDL_RenderPresent(renderer);
 }
 
@@ -86,9 +116,10 @@ void View::clearRenderer() {
     SDL_RenderClear(renderer);
 }
 
-Observer* View::createMovingObserver(int id, int maxWalkFrame, int xOffset, int yOffset) {
-    Observer* observer = new MovingObserver(id, this, textures[id], maxWalkFrame,
-                                            xOffset, yOffset);
+Observer* View::createMovingObserver(int id, int maxWalkFrame, int xOffset,
+    int yOffset) {
+    Observer* observer = new MovingObserver(id, this, textures[id],
+        maxWalkFrame, xOffset, yOffset);
     observers.emplace_back(observer);
     
     return observer;
@@ -103,7 +134,7 @@ Observer* View::createPlayerStatusObserver() {
 
 void View::removeObserver(Observer* observer) {
     observers.erase(remove(observers.begin(), observers.end(), observer),
-                    observers.end());
+        observers.end());
 }
 
 void View::updateCamera(SDL_Point* point) {
@@ -124,6 +155,13 @@ void View::updateCamera(SDL_Point* point) {
 
 void View::setMax(SDL_Point* max) {
     this->max = max;
+}
+
+void View::updateTime(Uint32 time) {
+    timeText.str("");
+    timeText << time;
+    textures[TIMER_ID]->initFromText(timeText.str(), font, renderer,
+        *fontColour);
 }
 
 SDL_Renderer* View::getRenderer() {

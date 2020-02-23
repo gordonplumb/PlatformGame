@@ -4,6 +4,7 @@
 #include <string>
 #include <game.h>
 #include <view.h>
+#include <timer.h>
 #include <gameconstants.h>
 #include <wall.h>
 #include <player.h>
@@ -18,6 +19,7 @@ const int BOTTOM = 8;
 
 Game::Game(View* view) {
     this->view = view;
+    timer = new Timer();
     mPlayer = new Player(view->createMovingObserver(PLAYER_ID, 2, 5, 10));
     mPlayer->addObserver(view->createPlayerStatusObserver());
 }
@@ -62,6 +64,10 @@ void Game::handleEvent(SDL_Event& event) {
             laser = mPlayer->fireLaser();
             laser->addObserver(view->createMovingObserver(LASER_ID, 0));
             lasers.emplace_back(laser);
+            break;
+
+            case SDLK_p:
+            // TODO: pausing
             break;
 
 #ifdef DEBUG
@@ -195,6 +201,7 @@ void Game::moveEntities() {
     }
     lasers = newLasers;
 
+    // render
     view->clearRenderer();
     mPlayer->notifyObservers();
     for (Laser* laser : lasers) {
@@ -202,6 +209,11 @@ void Game::moveEntities() {
     }
     for (AbstractEnemy* enemy : enemies) {
         enemy->notifyObservers();
+    }
+    Uint32 elapsed = timer->getTicks();
+    if (elapsed >= time + 1000) {
+        time = elapsed;
+        view->updateTime(time / 1000);
     }
     view->render(walls);
 }
@@ -335,6 +347,8 @@ void Game::initLevel(string path) {
             enemies.emplace_back(new MenacingBlob(x, y, view->createMovingObserver(MEN_BLOB_ID, 2)));
         }
     }
+
+    timer->start();
 }
 
 void Game::respawnEnemies() {
