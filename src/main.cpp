@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
                 }
                 handleEvent(event);
             }
-            game->moveEntities();
+            game->update();
         }
     }
 

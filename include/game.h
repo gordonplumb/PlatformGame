@@ -26,22 +26,32 @@ class Game {
 
     int checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2);
     void handlePlayerEnemyCollision(Player* player, int collision);
-    void handleEntityWallCollision(AbstractEntity* entity, Wall* wall, int collision);
+    void handleEntityWallCollision(AbstractEntity* entity, Wall* wall,
+        int collision);
+
+    void moveEntities();
+    void render();
 
     public:
     Game(View* view);
     ~Game();
 
+    void initLevel(std::string path);
+
+    // player action functions
     void playerJump();
     void playerLookUp(bool isLookingUp);
     void playerCrouch(bool isCrouching, bool left, bool right);
     void playerMove(bool stop, bool forward);
     void playerShoot();
     void resetPlayerActions(bool left, bool right, bool up, bool down);
-    void moveEntities();
-    void initLevel(std::string path);
+
+    // move game state along and render to view
+    void update();
+
     void respawnEnemies();
 
+    // timer functions
     void pause();
     void unpause();
     bool isPaused();

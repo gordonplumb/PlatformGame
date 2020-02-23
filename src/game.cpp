@@ -91,6 +91,13 @@ void Game::resetPlayerActions(bool left, bool right, bool up, bool down) {
     }
 }
 
+void Game::update() {
+    if (!isPaused()) {
+        moveEntities();
+        render();
+    }
+}
+
 void Game::moveEntities() {
     // move everything first
     mPlayer->move(0, levelHeight, 0, levelWidth);
@@ -181,8 +188,16 @@ void Game::moveEntities() {
         }
     }
     lasers = newLasers;
+    
+    // update time
+    Uint32 elapsed = timer->getTicks();
+    if (elapsed >= time + 1000) {
+        time = elapsed;
+        view->updateTime(time / 1000);
+    }
+}
 
-    // render
+void Game::render() {
     view->clearRenderer();
     mPlayer->notifyObservers();
     for (Laser* laser : lasers) {
@@ -190,11 +205,6 @@ void Game::moveEntities() {
     }
     for (AbstractEnemy* enemy : enemies) {
         enemy->notifyObservers();
-    }
-    Uint32 elapsed = timer->getTicks();
-    if (elapsed >= time + 1000) {
-        time = elapsed;
-        view->updateTime(time / 1000);
     }
     view->render(walls);
 }
