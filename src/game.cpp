@@ -98,19 +98,32 @@ void Game::update() {
     }
 }
 
-void Game::moveEntities() {
-    // move everything first
-    mPlayer->move(0, levelHeight, 0, levelWidth);
-    for (AbstractEnemy *enemy : enemies) {
-        enemy->move(0, levelHeight, 0, levelWidth);
-    }
-    for (Laser *laser : lasers) {
-        laser->move(0, levelHeight, 0, levelWidth);
+void Game::handleCharacterBorderCollision(AbstractEntity* entity) {
+    SDL_Rect hitbox = entity->getHitBox();
+    if (hitbox.x < 0 || hitbox.x + hitbox.w > levelWidth) {
+        entity->changePosX(entity->getVelX() * -1);
     }
 
+    if (hitbox.y < 0 || hitbox.y + hitbox.h > levelHeight) {
+        entity->changePosY(entity->getVelY() * -1);
+    }
+}
+
+void Game::moveEntities() {
+    Uint32 elapsed = timer->getTicks();
+
+    // move characters first
+    mPlayer->move(elapsed);
+    handleCharacterBorderCollision(mPlayer);
+    for (AbstractEnemy *enemy : enemies) {
+        enemy->move(elapsed);
+        handleCharacterBorderCollision(enemy);
+    }
+
+    int collision;
     // check for character collisions with walls
     for (Wall *wall : walls) {
-        int collision = checkCollision(mPlayer->getHitBox(), wall->getHitBox());
+        collision = checkCollision(mPlayer->getHitBox(), wall->getHitBox());
         if (collision > 0) {
             handleEntityWallCollision(mPlayer, wall, collision);
         }
@@ -122,8 +135,18 @@ void Game::moveEntities() {
         }
     }
 
-    int collision;
+    // move lasers and check for collisions
     for (int i = 0; i < lasers.size(); i++) {
+        lasers[i]->move(elapsed);
+        SDL_Rect hitbox = lasers[i]->getHitBox();
+
+        if (hitbox.x + hitbox.w < 0 || hitbox.x > levelWidth
+            || hitbox.y + hitbox.h < 0 || hitbox.y > levelHeight) {
+            Laser* temp = lasers[i];
+            lasers[i] = nullptr;
+            delete temp;
+        }
+
         if (lasers[i] == nullptr) continue;
         
         // check for laser collision with enemies
@@ -159,17 +182,20 @@ void Game::moveEntities() {
     }
 
     // check for player enemy collision
-    for (AbstractEnemy *enemy : enemies) {
-        if (enemy == nullptr) continue;
-        int collision = checkCollision(mPlayer->getHitBox(), enemy->getHitBox());
-        if (collision > 0) {
-            handlePlayerEnemyCollision(mPlayer, collision);
-            if (mPlayer->getHP() <= 0) {
-                // TODO: what do on death
-                cout << "i'm dead" << endl;
+    if (!mPlayer->isInvincible()) {
+        for (AbstractEnemy *enemy : enemies) {
+            if (enemy == nullptr) continue;
+            int collision = checkCollision(mPlayer->getHitBox(), enemy->getHitBox());
+            if (collision > 0) {
+                handlePlayerEnemyCollision(mPlayer, collision);
+                if (mPlayer->getHP() <= 0) {
+                    // TODO: what do on death
+                    cout << "i'm dead" << endl;
+                }
             }
         }
     }
+    
 
     // refresh the enemy list
     vector<AbstractEnemy*> newEnemies;
@@ -190,7 +216,6 @@ void Game::moveEntities() {
     lasers = newLasers;
     
     // update time
-    Uint32 elapsed = timer->getTicks();
     if (elapsed >= time + 1000) {
         time = elapsed;
         view->updateTime(time / 1000);
@@ -210,21 +235,22 @@ void Game::render() {
 }
 
 void Game::handlePlayerEnemyCollision(Player* player, int collision) {
-    // change this to set vel instead
     if ((collision & RIGHT) > 0) {
-        player->changePosX(-5);
+        player->setXRecoil(-10);
     } else if ((collision & LEFT) > 0) {
-        player->changePosX(5);
+        player->setXRecoil(10);
     }
 
     if ((collision & TOP) > 0) {
-        player->changePosY(5);
+        player->setYRecoil(10);
     } else if ((collision & BOTTOM) > 0) {
-        player->changePosY(-5);
+        player->setYRecoil(-10);
     }
     
     // TODO: make this more interesting than a constant
     player->changeHP(-1);
+    player->setInvincibility(true, timer->getTicks());
+
 }
 
 void Game::handleEntityWallCollision(AbstractEntity* entity, Wall* wall, int collision) {

@@ -11,24 +11,20 @@ Player::Player(Observer* observer):
 
 Player::~Player() {}
 
-void Player::move(int top, int bot, int left, int right) {
-    applyGravity();
+void Player::move(uint32_t time) {
+    AbstractEntity::move(time);
     mPosX += mVelX;
-    if ((mPosX < left) || (mPosX + PLAYER_WIDTH > right)) {
-        mPosX -= mVelX;
-    }
+    mPosY += mVelY;
 
     // determine direction to face
-    if (mVelX != 0) {
-        mForward = mVelX > 0;
+    if (mVelX - xRecoil != 0) {
+        mForward = mVelX - xRecoil > 0;
     }
 
-    mPosY += mVelY;
-    if ((mPosY < top) || (mPosY + PLAYER_HEIGHT > bot)) {
-        mPosY -= mVelY;
-    }
     mHitBox.x = mPosX;
     mHitBox.y = mPosY;
+
+    removeRecoil();
 }
 
 void Player::notifyObservers() {

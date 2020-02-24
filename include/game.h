@@ -28,6 +28,7 @@ class Game {
     void handlePlayerEnemyCollision(Player* player, int collision);
     void handleEntityWallCollision(AbstractEntity* entity, Wall* wall,
         int collision);
+    void handleCharacterBorderCollision(AbstractEntity* entity);
 
     void moveEntities();
     void render();

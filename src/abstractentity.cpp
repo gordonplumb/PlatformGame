@@ -20,6 +20,17 @@ AbstractEntity::~AbstractEntity() {
     }
 }
 
+void AbstractEntity::move(uint32_t time) {
+    applyGravity();
+
+    if (invincible) {
+        // remove invincibility once timer is up
+        if (time > invincibilityTimer + 3 * 1000) {
+            invincible = false;
+        }
+    }
+}
+
 void AbstractEntity::changePosX(int amount) {
     mPosX += amount;
 }
@@ -32,6 +43,19 @@ void AbstractEntity::applyGravity() {
     mVelY += 1;
 }
 
+void AbstractEntity::removeRecoil() {
+    if (xRecoil != 0) {
+        int xRemoveRecoil = xRecoil - xRecoil / 2;
+        mVelX -= xRemoveRecoil;
+        xRecoil -= xRemoveRecoil;
+    }
+    if (yRecoil != 0) {
+        int yRemoveRecoil = yRecoil - yRecoil / 2;
+        mVelY -= yRemoveRecoil;
+        yRecoil -= yRemoveRecoil;
+    }
+}
+
 bool AbstractEntity::canJump() {
     return mCanJump;
 }
@@ -42,6 +66,10 @@ bool AbstractEntity::isCrouching() {
 
 bool AbstractEntity::isLookingUp() {
     return mLookingUp;
+}
+
+bool AbstractEntity::isInvincible() {
+    return invincible;
 }
 
 void AbstractEntity::setJump(bool canJump) {
@@ -57,6 +85,13 @@ void AbstractEntity::setCrouch(bool crouching) {
 
 void AbstractEntity::setLookingUp(bool lookingUp) {
     mLookingUp = lookingUp;
+}
+
+void AbstractEntity::setInvincibility(bool invincible, uint32_t time) {
+    this->invincible = invincible;
+    if (invincible) {
+        invincibilityTimer = time;
+    }
 }
 
 void AbstractEntity::reverse() {
@@ -97,6 +132,16 @@ void AbstractEntity::changeVelX(int velX) {
 
 void AbstractEntity::changeVelY(int velY) {
     mVelY += velY;
+}
+
+void AbstractEntity::setXRecoil(int recoil) {
+    xRecoil = recoil;
+    mVelX += recoil;
+}
+
+void AbstractEntity::setYRecoil(int recoil) {
+    yRecoil = recoil;
+    mVelY += recoil;
 }
 
 void AbstractEntity::changeHP(int amount) {

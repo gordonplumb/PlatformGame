@@ -6,9 +6,9 @@ MenacingBlob::MenacingBlob(int x, int y, Observer* observer):
 
 MenacingBlob::~MenacingBlob() {}
 
-void MenacingBlob::move(int top, int bot, int left, int right) {
+void MenacingBlob::move(uint32_t time) {
     // TODO: different movement behaviour
-    applyGravity();
+    AbstractEntity::move(time);
     if (mPosX <= 200) {
         mVelX = MAX_SPEED;
     } else if (mPosX >= 300) {
@@ -21,13 +21,8 @@ void MenacingBlob::move(int top, int bot, int left, int right) {
     if (mVelX != 0) {
         mForward = !(mVelX > 0);
     }
-    if (mPosX < left || mPosX + BLOB_WIDTH > right) {
-        mPosX -= mVelX;
-    }
-
-    if (mPosY < top || mPosY + BLOB_HEIGHT > bot) {
-        mPosY -= mVelY;
-    }
+    
     mHitBox.x = mPosX;
     mHitBox.y = mPosY;
+    removeRecoil();
 }

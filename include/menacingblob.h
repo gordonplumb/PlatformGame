@@ -14,7 +14,7 @@ class MenacingBlob: public AbstractEnemy {
     MenacingBlob(int x, int y, Observer* observer);
     ~MenacingBlob();
 
-    void move(int top, int bot, int right, int left) override;
+    void move(uint32_t time) override;
 };
 
 #endif
