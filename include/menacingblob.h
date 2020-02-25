@@ -10,6 +10,7 @@ class MenacingBlob: public AbstractEnemy {
     static const int BLOB_WIDTH = 30;
     static const int BLOB_HEIGHT = 30;
     static const int MAX_SPEED = 2;
+    static const int DAMAGE = 1;
 
     MenacingBlob(int x, int y, Observer* observer);
     ~MenacingBlob();

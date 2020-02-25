@@ -3,8 +3,8 @@
 #include <observer.h>
 
 Laser::Laser(int x, int y, bool horizontal, bool vertical, int xModifier,
-             int yModifier):
-    AbstractEntity {LASER_WIDTH, LASER_HEIGHT, LASER_MAX_SPEED, x, y, 1} {
+             int yModifier, int damage):
+    AbstractEntity {LASER_WIDTH, LASER_HEIGHT, LASER_MAX_SPEED, x, y, 1, damage} {
     id = LASER_ID;
     centre = new SDL_Point {mWidth / 2, mHeight / 2};
     if (horizontal && vertical) {

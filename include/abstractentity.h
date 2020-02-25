@@ -20,6 +20,7 @@ class AbstractEntity {
     int yRecoil = 0;
     int mTotalHP;
     int mHP;
+    int damage;
 
     bool invincible = false;
     uint32_t invincibilityTimer = 0;
@@ -34,7 +35,7 @@ class AbstractEntity {
 
     public:
     AbstractEntity(int width, int height, int maxSpeed, int posX,
-                   int posY, int totalHP);
+                   int posY, int totalHP, int damage);
     virtual ~AbstractEntity();
 
     virtual void move(uint32_t time);
@@ -64,6 +65,7 @@ class AbstractEntity {
     int getVelY();
     int getTotalHP();
     int getHP();
+    int getDamage();
     SDL_Rect getHitBox();
 };
 

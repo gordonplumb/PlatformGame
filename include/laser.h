@@ -19,7 +19,7 @@ class Laser: public AbstractEntity {
     static const int LASER_MAX_SPEED = 10;
 
     Laser(int x, int y, bool horizontal, bool vertical, int xModifier,
-          int yModifier);
+          int yModifier, int damage);
     ~Laser();
 
     void move(uint32_t time) override;

@@ -25,7 +25,7 @@ class Game {
     uint32_t time = 0;
 
     int checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2);
-    void handlePlayerEnemyCollision(Player* player, int collision);
+    void handlePlayerEnemyCollision(Player* player, int collision, int damage);
     void handleEntityWallCollision(AbstractEntity* entity, Wall* wall,
         int collision);
     void handleCharacterBorderCollision(AbstractEntity* entity);

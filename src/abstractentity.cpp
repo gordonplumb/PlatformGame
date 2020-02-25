@@ -2,7 +2,7 @@
 #include <observer.h>
 
 AbstractEntity::AbstractEntity(int width, int height, int maxSpeed, int posX,
-                               int posY, int totalHP) {
+                               int posY, int totalHP, int damage) {
     mWidth = width;
     mHeight = height;
     mMaxSpeed = maxSpeed;
@@ -12,6 +12,7 @@ AbstractEntity::AbstractEntity(int width, int height, int maxSpeed, int posX,
     mHP = totalHP;
     mHitBox.w = width;
     mHitBox.h = height;
+    this->damage = damage;
 }
 
 AbstractEntity::~AbstractEntity() {
@@ -57,7 +58,8 @@ void AbstractEntity::removeRecoil() {
 }
 
 bool AbstractEntity::canJump() {
-    return mCanJump;
+    // y vel > 1 means entity is falling or being pushed down
+    return mCanJump && mVelY <= 1;
 }
 
 bool AbstractEntity::isCrouching() {
@@ -124,6 +126,10 @@ int AbstractEntity::getTotalHP() {
 
 int AbstractEntity::getHP() {
     return mHP;
+}
+
+int AbstractEntity::getDamage() {
+    return damage;
 }
 
 void AbstractEntity::changeVelX(int velX) {

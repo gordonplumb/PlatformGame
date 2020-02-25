@@ -5,7 +5,7 @@
 
 Player::Player(Observer* observer):
     AbstractEntity(PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_MAX_SPEED,
-                   100, 200, 5) {
+                   100, 200, 10, 0) {
     addObserver(observer);
 }
 
@@ -56,5 +56,5 @@ Laser* Player::fireLaser() {
         y = mHitBox.y + 38;
     }
 
-    return new Laser(x, y, horizontal, vertical, xModifier, yModifier);
+    return new Laser(x, y, horizontal, vertical, xModifier, yModifier, 1);
 }

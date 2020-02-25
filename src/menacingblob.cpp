@@ -2,7 +2,7 @@
 #include <observer.h>
 
 MenacingBlob::MenacingBlob(int x, int y, Observer* observer): 
-    AbstractEnemy(BLOB_WIDTH, BLOB_HEIGHT, MAX_SPEED, x, y, 1, observer) {}
+    AbstractEnemy(BLOB_WIDTH, BLOB_HEIGHT, MAX_SPEED, x, y, 1, DAMAGE, observer) {}
 
 MenacingBlob::~MenacingBlob() {}
 

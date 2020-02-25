@@ -152,10 +152,10 @@ void Game::moveEntities() {
         // check for laser collision with enemies
         for (int j = 0; j < enemies.size(); j++) {
             if (enemies[j] == nullptr) continue;
-            collision = checkCollision(lasers[i]->getHitBox(), enemies[j]->getHitBox());
+            collision = checkCollision(lasers[i]->getHitBox(),
+                enemies[j]->getHitBox());
             if (collision > 0) {
-                // TODO: make this more interesting
-                enemies[j]->changeHP(-1);
+                enemies[j]->changeHP(lasers[i]->getDamage() * -1);
                 if (enemies[j]->getHP() <= 0) {
                     AbstractEnemy* temp = enemies[j];
                     enemies[j] = nullptr;
@@ -187,7 +187,7 @@ void Game::moveEntities() {
             if (enemy == nullptr) continue;
             int collision = checkCollision(mPlayer->getHitBox(), enemy->getHitBox());
             if (collision > 0) {
-                handlePlayerEnemyCollision(mPlayer, collision);
+                handlePlayerEnemyCollision(mPlayer, collision, enemy->getDamage());
                 if (mPlayer->getHP() <= 0) {
                     // TODO: what do on death
                     cout << "i'm dead" << endl;
@@ -195,7 +195,14 @@ void Game::moveEntities() {
             }
         }
     }
-    
+
+    // check if the player was pushed into a wall by enemy
+    for (Wall *wall : walls) {
+        collision = checkCollision(mPlayer->getHitBox(), wall->getHitBox());
+        if (collision > 0) {
+            handleEntityWallCollision(mPlayer, wall, collision);
+        }
+    }
 
     // refresh the enemy list
     vector<AbstractEnemy*> newEnemies;
@@ -234,7 +241,7 @@ void Game::render() {
     view->render(walls);
 }
 
-void Game::handlePlayerEnemyCollision(Player* player, int collision) {
+void Game::handlePlayerEnemyCollision(Player* player, int collision, int damage) {
     if ((collision & RIGHT) > 0) {
         player->setXRecoil(-10);
     } else if ((collision & LEFT) > 0) {
@@ -247,8 +254,7 @@ void Game::handlePlayerEnemyCollision(Player* player, int collision) {
         player->setYRecoil(-10);
     }
     
-    // TODO: make this more interesting than a constant
-    player->changeHP(-1);
+    player->changeHP(damage * -1);
     player->setInvincibility(true, timer->getTicks());
 
 }

@@ -8,7 +8,7 @@ class Observer;
 class AbstractEnemy: public AbstractEntity {
     public:
     AbstractEnemy(int width, int height, int maxSpeed, int x, int y,
-                  int totalHP, Observer* observer);
+                  int totalHP, int damage, Observer* observer);
     ~AbstractEnemy();
 };
 
