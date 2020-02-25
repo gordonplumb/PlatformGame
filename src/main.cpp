@@ -94,6 +94,10 @@ void handleEvent(SDL_Event& event) {
         if (state[SDL_SCANCODE_R] == 1 && prevKeyState[SDL_SCANCODE_R] == 0) {
             game->respawnEnemies();
         }
+
+        if (state[SDL_SCANCODE_K] == 1 && prevKeyState[SDL_SCANCODE_K] == 0) {
+            game->killPlayer();
+        }
 #endif
     }
 

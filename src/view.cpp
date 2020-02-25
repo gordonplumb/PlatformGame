@@ -36,6 +36,13 @@ TextureWrapper* View::loadTexture(string path, int height, int width) {
     return textureWrapper;
 }
 
+TextureWrapper* View::loadTextureFromText(string text) {
+    TextureWrapper* textureWrapper = new TextureWrapper();
+    textureWrapper->initFromText(text, font, renderer, *fontColour);
+
+    return textureWrapper;
+}
+
 void View::loadTextures() {
     textures.emplace(PLAYER_ID, loadTexture("media/player.bmp", 90, 50));
     textures.emplace(LASER_ID, loadTexture("media/laser20x8.bmp"));
@@ -43,9 +50,8 @@ void View::loadTextures() {
     textures.emplace(MEN_BLOB_ID, loadTexture("media/menacingblob.bmp", 30, 30));
     textures.emplace(HEART_ID, loadTexture("media/heart.bmp"));
 
-    TextureWrapper* timer = new TextureWrapper();
-    timer->initFromText("0", font, renderer, *fontColour);
-    textures.emplace(TIMER_ID, timer);
+    textures.emplace(TIMER_ID, loadTextureFromText("0"));
+    textures.emplace(GAME_OVER_ID, loadTextureFromText(GAME_OVER));
 }
 
 bool View::init() {
@@ -93,7 +99,7 @@ bool View::init() {
     return success;
 }
 
-void View::render(vector<Wall*> walls) {
+void View::render(vector<Wall*> walls, bool gameOver) {
     // render walls
     TextureWrapper* wallTexture = textures[WALL_ID];
     for (Wall* wall : walls) {
@@ -109,6 +115,10 @@ void View::render(vector<Wall*> walls) {
 
     // render time string
     textures[TIMER_ID]->render(renderer, SCREEN_WIDTH - 45, 5, 0, 0);
+    if (gameOver) {
+        textures[GAME_OVER_ID]->render(renderer, SCREEN_WIDTH / 2 - 40,
+        (SCREEN_HEIGHT - 20) / 2, 0, 0);
+    }
     SDL_RenderPresent(renderer);
 }
 

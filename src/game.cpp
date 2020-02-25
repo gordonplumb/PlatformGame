@@ -71,6 +71,10 @@ void Game::playerShoot() {
     lasers.emplace_back(laser);
 }
 
+void Game::playerDeath() {
+    timer->stop();
+}
+
 void Game::resetPlayerActions(bool left, bool right, bool up, bool down) {
     // resetting all actions that result from a held key 
     if (left) {
@@ -92,9 +96,9 @@ void Game::resetPlayerActions(bool left, bool right, bool up, bool down) {
 }
 
 void Game::update() {
-    if (!isPaused()) {
+    if (!(isPaused() || !isStarted())) {
         moveEntities();
-        render();
+        renderGame();
     }
 }
 
@@ -110,7 +114,12 @@ void Game::handleCharacterBorderCollision(AbstractEntity* entity) {
 }
 
 void Game::moveEntities() {
+    // update time
     Uint32 elapsed = timer->getTicks();
+    if (elapsed >= time + 1000) {
+        time = elapsed;
+        view->updateTime(time / 1000);
+    }
 
     // move characters first
     mPlayer->move(elapsed);
@@ -185,22 +194,13 @@ void Game::moveEntities() {
     if (!mPlayer->isInvincible()) {
         for (AbstractEnemy *enemy : enemies) {
             if (enemy == nullptr) continue;
-            int collision = checkCollision(mPlayer->getHitBox(), enemy->getHitBox());
+            int collision = checkCollision(mPlayer->getHitBox(),
+                enemy->getHitBox());
             if (collision > 0) {
-                handlePlayerEnemyCollision(mPlayer, collision, enemy->getDamage());
-                if (mPlayer->getHP() <= 0) {
-                    // TODO: what do on death
-                    cout << "i'm dead" << endl;
-                }
+                handlePlayerEnemyCollision(mPlayer, collision,
+                    enemy->getDamage());
+                break;
             }
-        }
-    }
-
-    // check if the player was pushed into a wall by enemy
-    for (Wall *wall : walls) {
-        collision = checkCollision(mPlayer->getHitBox(), wall->getHitBox());
-        if (collision > 0) {
-            handleEntityWallCollision(mPlayer, wall, collision);
         }
     }
 
@@ -221,15 +221,21 @@ void Game::moveEntities() {
         }
     }
     lasers = newLasers;
-    
-    // update time
-    if (elapsed >= time + 1000) {
-        time = elapsed;
-        view->updateTime(time / 1000);
+
+    if (collision > 0 && mPlayer->getHP() > 0) {
+        // check if the player was pushed into a wall by enemy
+        for (Wall *wall : walls) {
+            collision = checkCollision(mPlayer->getHitBox(), wall->getHitBox());
+            if (collision > 0) {
+                handleEntityWallCollision(mPlayer, wall, collision);
+            }
+        }
+    } else if (mPlayer->getHP() <= 0) {
+        playerDeath();
     }
 }
 
-void Game::render() {
+void Game::renderGame() {
     view->clearRenderer();
     mPlayer->notifyObservers();
     for (Laser* laser : lasers) {
@@ -238,7 +244,10 @@ void Game::render() {
     for (AbstractEnemy* enemy : enemies) {
         enemy->notifyObservers();
     }
-    view->render(walls);
+    view->render(walls, mPlayer->getHP() <= 0);
+}
+
+void Game::renderDeathScreen() {
 }
 
 void Game::handlePlayerEnemyCollision(Player* player, int collision, int damage) {
@@ -374,6 +383,7 @@ void Game::initLevel(string path) {
     timer->start();
 }
 
+#ifdef DEBUG
 void Game::respawnEnemies() {
     enemies.clear();
 
@@ -393,6 +403,11 @@ void Game::respawnEnemies() {
     }
 }
 
+void Game::killPlayer() {
+    mPlayer->changeHP(mPlayer->getHP() * -1);
+}
+#endif
+
 void Game::pause() {
     timer->pause();
 }
@@ -403,4 +418,8 @@ void Game::unpause() {
 
 bool Game::isPaused() {
     return timer->isPaused();
+}
+
+bool Game::isStarted() {
+    return timer->isStarted();
 }

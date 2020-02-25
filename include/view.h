@@ -28,13 +28,14 @@ class View {
     std::stringstream timeText;
 
     TextureWrapper* loadTexture(std::string path, int height = 0, int width = 0);
+    TextureWrapper* loadTextureFromText(std::string text);
     void loadTextures();
 
     public:
     View();
     ~View();
     bool init();
-    void render(std::vector<Wall*> walls);
+    void render(std::vector<Wall*> walls, bool gameOver);
     void clearRenderer();
     Observer* createMovingObserver(int id, int maxWalkFrame, int xOffset = 0,
                                    int yOffset = 0);

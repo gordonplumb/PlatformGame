@@ -31,7 +31,8 @@ class Game {
     void handleCharacterBorderCollision(AbstractEntity* entity);
 
     void moveEntities();
-    void render();
+    void renderGame();
+    void renderDeathScreen();
 
     public:
     Game(View* view);
@@ -45,17 +46,22 @@ class Game {
     void playerCrouch(bool isCrouching, bool left, bool right);
     void playerMove(bool stop, bool forward);
     void playerShoot();
+    void playerDeath();
     void resetPlayerActions(bool left, bool right, bool up, bool down);
 
     // move game state along and render to view
     void update();
 
+#ifdef DEBUG
     void respawnEnemies();
+    void killPlayer();
+#endif
 
     // timer functions
     void pause();
     void unpause();
     bool isPaused();
+    bool isStarted();
 };
 
 #endif
