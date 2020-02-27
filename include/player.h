@@ -16,7 +16,7 @@ class Player: public AbstractEntity {
 
     ~Player();
 
-    void move(uint32_t time) override;
+    void move(uint32_t time);
     void notifyObservers() override;
 
     Laser* fireLaser();

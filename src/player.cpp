@@ -12,7 +12,13 @@ Player::Player(Observer* observer):
 Player::~Player() {}
 
 void Player::move(uint32_t time) {
-    AbstractEntity::move(time);
+    applyGravity();
+    
+    // remove invincibility once timer is up
+    if (invincible && time > invincibilityTimer + 3 * 1000) {
+        invincible = false;
+    }
+
     mPosX += mVelX;
     mPosY += mVelY;
 

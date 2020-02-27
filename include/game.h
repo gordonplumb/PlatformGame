@@ -7,6 +7,7 @@
 class Player;
 class AbstractEntity;
 class AbstractEnemy;
+class MovementStrategy;
 class Wall;
 class Laser;
 class View;
@@ -32,7 +33,6 @@ class Game {
 
     void moveEntities();
     void renderGame();
-    void renderDeathScreen();
 
     public:
     Game(View* view);

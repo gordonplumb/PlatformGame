@@ -22,7 +22,7 @@ class Laser: public AbstractEntity {
           int yModifier, int damage);
     ~Laser();
 
-    void move(uint32_t time) override;
+    void move();
     void notifyObservers() override;
 };
 

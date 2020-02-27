@@ -25,7 +25,7 @@ Laser::Laser(int x, int y, bool horizontal, bool vertical, int xModifier,
 
 Laser::~Laser() {}
 
-void Laser::move(uint32_t time) {
+void Laser::move() {
     mPosX += mVelX;
     mPosY += mVelY;
     mHitBox.x = mPosX;

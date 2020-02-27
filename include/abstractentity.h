@@ -38,7 +38,6 @@ class AbstractEntity {
                    int posY, int totalHP, int damage);
     virtual ~AbstractEntity();
 
-    virtual void move(uint32_t time);
     virtual void notifyObservers();
 
     void addObserver(Observer* observer);

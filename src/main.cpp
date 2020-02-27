@@ -38,7 +38,6 @@ void handleEvent(SDL_Event& event) {
         }
 
         // jump
-        // TODO: remove ability to jump after walking off a platform
         if (state[SDL_SCANCODE_SPACE] == 1
             && prevKeyState[SDL_SCANCODE_SPACE] == 0) {
             game->playerJump();

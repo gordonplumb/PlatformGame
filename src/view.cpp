@@ -48,6 +48,8 @@ void View::loadTextures() {
     textures.emplace(LASER_ID, loadTexture("media/laser20x8.bmp"));
     textures.emplace(WALL_ID, loadTexture("media/wall.bmp"));
     textures.emplace(MEN_BLOB_ID, loadTexture("media/menacingblob.bmp", 30, 30));
+    textures.emplace(ZOMBIE_ID, loadTexture("media/zombie.bmp", 80, 40));
+    textures.emplace(BEE_ID, loadTexture("media/bee.bmp", 20, 30));
     textures.emplace(HEART_ID, loadTexture("media/heart.bmp"));
 
     textures.emplace(TIMER_ID, loadTextureFromText("0"));

@@ -9,6 +9,11 @@
 #include <wall.h>
 #include <player.h>
 #include <menacingblob.h>
+#include <zombie.h>
+#include <bee.h>
+#include <movementstrategy.h>
+#include <patrolstrategy.h>
+#include <followplayerstrategy.h>
 #include <laser.h>
 using namespace std;
 
@@ -125,7 +130,7 @@ void Game::moveEntities() {
     mPlayer->move(elapsed);
     handleCharacterBorderCollision(mPlayer);
     for (AbstractEnemy *enemy : enemies) {
-        enemy->move(elapsed);
+        enemy->move(mPlayer->getHitBox().x, mPlayer->getHitBox().y);
         handleCharacterBorderCollision(enemy);
     }
 
@@ -146,7 +151,7 @@ void Game::moveEntities() {
 
     // move lasers and check for collisions
     for (int i = 0; i < lasers.size(); i++) {
-        lasers[i]->move(elapsed);
+        lasers[i]->move();
         SDL_Rect hitbox = lasers[i]->getHitBox();
 
         if (hitbox.x + hitbox.w < 0 || hitbox.x > levelWidth
@@ -247,9 +252,6 @@ void Game::renderGame() {
     view->render(walls, mPlayer->getHP() <= 0);
 }
 
-void Game::renderDeathScreen() {
-}
-
 void Game::handlePlayerEnemyCollision(Player* player, int collision, int damage) {
     if ((collision & RIGHT) > 0) {
         player->setXRecoil(-10);
@@ -344,6 +346,25 @@ int Game::checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2) {
     return collision;
 }
 
+MovementStrategy* readMovementStrategy(istringstream& iss) {
+    MovementStrategy* strategy;
+    string flag;
+    iss >> flag;
+    if (flag == "p") {
+        int left;
+        int right;
+        iss >> left;
+        iss >> right;
+        strategy = new PatrolStrategy(left, right);
+    } else if (flag == "f") {
+        bool flying;
+        iss >> flying;
+        strategy = new FollowPlayerStrategy(flying);
+    }
+
+    return strategy;
+}
+
 void Game::initLevel(string path) {
     levelPath = path;
     ifstream file {levelPath};
@@ -367,19 +388,26 @@ void Game::initLevel(string path) {
         istringstream iss {s};
 
         iss >> flag;
+        iss >> x;
+        iss >> y;
         if (flag == "w") { // construct wall
-            iss >> x;
-            iss >> y;
             iss >> w;
             iss >> h;
             walls.emplace_back(new Wall(x, y, w, h));
         } else if (flag == "mb") {
-            iss >> x;
-            iss >> y;
-            enemies.emplace_back(new MenacingBlob(x, y, view->createMovingObserver(MEN_BLOB_ID, 2)));
+            MovementStrategy* strategy = readMovementStrategy(iss);
+            enemies.emplace_back(new MenacingBlob(x, y, strategy, 
+                view->createMovingObserver(MEN_BLOB_ID, 2)));
+        } else if (flag == "z") {
+            MovementStrategy* strategy = readMovementStrategy(iss);
+            enemies.emplace_back(new Zombie(x, y, strategy,
+                view->createMovingObserver(ZOMBIE_ID, 2)));
+        } else if (flag == "b") {
+            MovementStrategy* strategy = readMovementStrategy(iss);
+            enemies.emplace_back(new Bee(x, y, strategy,
+                view->createMovingObserver(BEE_ID, 2)));
         }
     }
-
     timer->start();
 }
 
@@ -395,10 +423,20 @@ void Game::respawnEnemies() {
         istringstream iss {s};
 
         iss >> flag;
+        iss >> x;
+        iss >> y;
         if (flag == "mb") {
-            iss >> x;
-            iss >> y;
-            enemies.emplace_back(new MenacingBlob(x, y, view->createMovingObserver(MEN_BLOB_ID, 2)));
+            MovementStrategy* strategy = readMovementStrategy(iss);
+            enemies.emplace_back(new MenacingBlob(x, y, strategy,
+                view->createMovingObserver(MEN_BLOB_ID, 2)));
+        } else if (flag == "z") {
+            MovementStrategy* strategy = readMovementStrategy(iss);
+            enemies.emplace_back(new Zombie(x, y, strategy,
+                view->createMovingObserver(ZOMBIE_ID, 2)));
+        } else if (flag == "b") {
+            MovementStrategy* strategy = readMovementStrategy(iss);
+            enemies.emplace_back(new Bee(x, y, strategy,
+                view->createMovingObserver(BEE_ID, 2)));
         }
     }
 }

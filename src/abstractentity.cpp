@@ -21,17 +21,6 @@ AbstractEntity::~AbstractEntity() {
     }
 }
 
-void AbstractEntity::move(uint32_t time) {
-    applyGravity();
-
-    if (invincible) {
-        // remove invincibility once timer is up
-        if (time > invincibilityTimer + 3 * 1000) {
-            invincible = false;
-        }
-    }
-}
-
 void AbstractEntity::changePosX(int amount) {
     mPosX += amount;
 }
