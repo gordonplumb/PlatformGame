@@ -24,6 +24,12 @@ void handleEvent(SDL_Event& event) {
             game->unpause();
             wasPaused = true;
         }
+    } else if (!game->isStarted()) {
+        if (state[SDL_SCANCODE_SPACE] == 1
+            && prevKeyState[SDL_SCANCODE_SPACE] == 0) {
+            game->initLevel();
+            wasPaused = true;
+        }
     } else {
         // pause
         if (state[SDL_SCANCODE_P] == 1 && prevKeyState[SDL_SCANCODE_P] == 0) {
@@ -121,7 +127,7 @@ int main(int argc, char** argv) {
         SDL_Event event;
         memset(prevKeyState, 0, sizeof(uint8_t) * SDL_NUM_SCANCODES);
         game = new Game(view);
-        game->initLevel("levels/temp");
+        game->initLevel();
 
         while (!quit) {
             while (SDL_PollEvent(&event) != 0) {

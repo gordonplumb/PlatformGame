@@ -103,7 +103,8 @@ void Game::resetPlayerActions(bool left, bool right, bool up, bool down) {
 void Game::update() {
     if (!(isPaused() || !isStarted())) {
         moveEntities();
-        renderGame();
+        bool clear = levelCleared();
+        renderGame(mPlayer->getHP() <= 0, clear, levelIndex == NUM_LEVELS);
     }
 }
 
@@ -240,8 +241,24 @@ void Game::moveEntities() {
     }
 }
 
-void Game::renderGame() {
+bool Game::levelCleared() {
+    SDL_Rect pHitbox = mPlayer->getHitBox();
+
+    if (pHitbox.x >= goal.x && pHitbox.y >= goal.y 
+        && pHitbox.x + pHitbox.w <= goal.x + goal.w
+        && pHitbox.y + pHitbox.h <= goal.y + goal.h) {
+        timer->stop();
+        time = 0;
+        levelIndex++;
+        return true;
+    }
+
+    return false;
+}
+
+void Game::renderGame(bool dead, bool clear, bool win) {
     view->clearRenderer();
+    view->renderTerrain(walls, goal);
     mPlayer->notifyObservers();
     for (Laser* laser : lasers) {
         laser->notifyObservers();
@@ -249,7 +266,7 @@ void Game::renderGame() {
     for (AbstractEnemy* enemy : enemies) {
         enemy->notifyObservers();
     }
-    view->render(walls, mPlayer->getHP() <= 0);
+    view->renderStatusText(dead, clear, win);
 }
 
 void Game::handlePlayerEnemyCollision(Player* player, int collision, int damage) {
@@ -365,9 +382,14 @@ MovementStrategy* readMovementStrategy(istringstream& iss) {
     return strategy;
 }
 
-void Game::initLevel(string path) {
-    levelPath = path;
-    ifstream file {levelPath};
+void Game::initLevel() {
+    if (levelIndex == NUM_LEVELS) {
+        levelIndex = 0;
+    }
+    walls.clear();
+    enemies.clear();
+    lasers.clear();
+    ifstream file {LEVEL_PATHS[levelIndex]};
 
     // read in width and height of level
     int dim;
@@ -394,6 +416,15 @@ void Game::initLevel(string path) {
             iss >> w;
             iss >> h;
             walls.emplace_back(new Wall(x, y, w, h));
+        } else if (flag == "g") {
+            goal = {x, y, 70, 100};
+        } else if (flag == "p") {
+            mPlayer->reset();
+            if (mPlayer->getHP() <= 0 || levelIndex == 0) {
+                mPlayer->changeHP(mPlayer->getTotalHP() - mPlayer->getHP());
+            }
+            mPlayer->changePosX(x);
+            mPlayer->changePosY(y);
         } else if (flag == "mb") {
             MovementStrategy* strategy = readMovementStrategy(iss);
             enemies.emplace_back(new MenacingBlob(x, y, strategy, 
@@ -415,7 +446,7 @@ void Game::initLevel(string path) {
 void Game::respawnEnemies() {
     enemies.clear();
 
-    ifstream file {levelPath};
+    ifstream file {LEVEL_PATHS[levelIndex]};
     string s;
     string flag;
     int x, y;

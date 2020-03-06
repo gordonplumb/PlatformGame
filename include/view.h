@@ -35,7 +35,8 @@ class View {
     View();
     ~View();
     bool init();
-    void render(std::vector<Wall*> walls, bool gameOver);
+    void renderTerrain(std::vector<Wall*> walls, SDL_Rect goal);
+    void renderStatusText(bool gameOver, bool levelClear, bool win);
     void clearRenderer();
     Observer* createMovingObserver(int id, int maxWalkFrame, int xOffset = 0,
                                    int yOffset = 0);

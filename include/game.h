@@ -7,7 +7,6 @@
 class Player;
 class AbstractEntity;
 class AbstractEnemy;
-class MovementStrategy;
 class Wall;
 class Laser;
 class View;
@@ -20,7 +19,8 @@ class Game {
     std::vector<Wall*> walls;
     std::vector<AbstractEnemy*> enemies;
     std::vector<Laser*> lasers;
-    std::string levelPath;
+    SDL_Rect goal;
+    int levelIndex = 0;
     int levelWidth;
     int levelHeight;
     uint32_t time = 0;
@@ -32,13 +32,14 @@ class Game {
     void handleCharacterBorderCollision(AbstractEntity* entity);
 
     void moveEntities();
-    void renderGame();
+    bool levelCleared();
+    void renderGame(bool dead, bool clear, bool win);
 
     public:
     Game(View* view);
     ~Game();
 
-    void initLevel(std::string path);
+    void initLevel();
 
     // player action functions
     void playerJump();

@@ -18,6 +18,7 @@ class Player: public AbstractEntity {
 
     void move(uint32_t time);
     void notifyObservers() override;
+    void reset();
 
     Laser* fireLaser();
 };

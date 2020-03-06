@@ -10,6 +10,8 @@ AbstractEntity::AbstractEntity(int width, int height, int maxSpeed, int posX,
     mPosY = posY;
     mTotalHP = totalHP;
     mHP = totalHP;
+    mHitBox.x = mPosX;
+    mHitBox.y = mPosY;
     mHitBox.w = width;
     mHitBox.h = height;
     this->damage = damage;

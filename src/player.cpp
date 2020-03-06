@@ -5,7 +5,7 @@
 
 Player::Player(Observer* observer):
     AbstractEntity(PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_MAX_SPEED,
-                   100, 200, 10, 0) {
+                   0, 0, 10, 0) {
     addObserver(observer);
 }
 
@@ -40,6 +40,17 @@ void Player::notifyObservers() {
         observer->notify(mHP, mPosX, mPosY, mForward, mCrouching, mLookingUp,
                          mVelX != 0, 0, centre);
     }
+}
+
+void Player::reset() {
+    mPosX = 0;
+    mPosY = 0;
+    mHitBox.x = 0;
+    mHitBox.y = 0;
+    mVelX = 0;
+    mVelY = 0;
+    mLookingUp = false;
+    mCrouching = false;
 }
 
 Laser* Player::fireLaser() {

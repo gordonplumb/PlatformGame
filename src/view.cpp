@@ -47,6 +47,7 @@ void View::loadTextures() {
     textures.emplace(PLAYER_ID, loadTexture("media/player.bmp", 90, 50));
     textures.emplace(LASER_ID, loadTexture("media/laser20x8.bmp"));
     textures.emplace(WALL_ID, loadTexture("media/wall.bmp"));
+    textures.emplace(GOAL_ID, loadTexture("media/goal.bmp"));
     textures.emplace(MEN_BLOB_ID, loadTexture("media/menacingblob.bmp", 30, 30));
     textures.emplace(ZOMBIE_ID, loadTexture("media/zombie.bmp", 80, 40));
     textures.emplace(BEE_ID, loadTexture("media/bee.bmp", 20, 30));
@@ -54,6 +55,8 @@ void View::loadTextures() {
 
     textures.emplace(TIMER_ID, loadTextureFromText("0"));
     textures.emplace(GAME_OVER_ID, loadTextureFromText(GAME_OVER));
+    textures.emplace(LEVEL_CLEAR_ID, loadTextureFromText(LEVEL_CLEAR));
+    textures.emplace(YOU_WIN_ID, loadTextureFromText(YOU_WIN));
 }
 
 bool View::init() {
@@ -101,7 +104,8 @@ bool View::init() {
     return success;
 }
 
-void View::render(vector<Wall*> walls, bool gameOver) {
+
+void View::renderTerrain(vector<Wall*> walls, SDL_Rect goal) {
     // render walls
     TextureWrapper* wallTexture = textures[WALL_ID];
     for (Wall* wall : walls) {
@@ -115,14 +119,26 @@ void View::render(vector<Wall*> walls, bool gameOver) {
         }
     }
 
+    // render goal
+    textures[GOAL_ID]->render(renderer, goal.x, goal.y, camera->x, camera->y);
+}
+
+void View::renderStatusText(bool gameOver, bool levelClear, bool win) {
     // render time string
     textures[TIMER_ID]->render(renderer, SCREEN_WIDTH - 45, 5, 0, 0);
-    if (gameOver) {
+    if (win) {
+        textures[YOU_WIN_ID]->render(renderer, SCREEN_WIDTH / 2 - 30,
+        (SCREEN_HEIGHT - 20) / 2, 0, 0);
+    } else if (levelClear) {
+        textures[LEVEL_CLEAR_ID]->render(renderer, SCREEN_WIDTH / 2 - 160,
+        (SCREEN_HEIGHT - 20) / 2, 0, 0);
+    } else if (gameOver) {
         textures[GAME_OVER_ID]->render(renderer, SCREEN_WIDTH / 2 - 40,
         (SCREEN_HEIGHT - 20) / 2, 0, 0);
     }
     SDL_RenderPresent(renderer);
 }
+
 
 void View::clearRenderer() {
     SDL_RenderClear(renderer);
