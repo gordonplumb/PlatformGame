@@ -25,10 +25,12 @@ AbstractEntity::~AbstractEntity() {
 
 void AbstractEntity::changePosX(int amount) {
     mPosX += amount;
+    mHitBox.x += amount;
 }
 
 void AbstractEntity::changePosY(int amount) {
     mPosY += amount;
+    mHitBox.y += amount;
 }
 
 void AbstractEntity::applyGravity() {

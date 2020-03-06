@@ -29,8 +29,6 @@ void Player::move(uint32_t time) {
 
     mHitBox.x = mPosX;
     mHitBox.y = mPosY;
-
-    removeRecoil();
 }
 
 void Player::notifyObservers() {

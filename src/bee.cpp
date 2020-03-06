@@ -20,5 +20,4 @@ void Bee::move(int playerx, int playery) {
     
     mHitBox.x = mPosX;
     mHitBox.y = mPosY;
-    removeRecoil();
 }

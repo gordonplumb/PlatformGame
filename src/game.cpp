@@ -150,6 +150,12 @@ void Game::moveEntities() {
         }
     }
 
+    // remove recoil from previous actions
+    mPlayer->removeRecoil();
+    for (AbstractEnemy* enemy : enemies) {
+        enemy->removeRecoil();
+    }
+
     // move lasers and check for collisions
     for (int i = 0; i < lasers.size(); i++) {
         lasers[i]->move();
@@ -227,16 +233,8 @@ void Game::moveEntities() {
         }
     }
     lasers = newLasers;
-
-    if (collision > 0 && mPlayer->getHP() > 0) {
-        // check if the player was pushed into a wall by enemy
-        for (Wall *wall : walls) {
-            collision = checkCollision(mPlayer->getHitBox(), wall->getHitBox());
-            if (collision > 0) {
-                handleEntityWallCollision(mPlayer, wall, collision);
-            }
-        }
-    } else if (mPlayer->getHP() <= 0) {
+    
+    if (mPlayer->getHP() <= 0) {
         playerDeath();
     }
 }
@@ -294,29 +292,56 @@ void Game::handleEntityWallCollision(AbstractEntity* entity, Wall* wall, int col
 
     if ((collision & RIGHT) > 0) {
         collisionDepth = pHitBox.x + pHitBox.w - wHitBox.x;
-        if (collisionDepth < entity->getVelX()) {
-            entity->changePosX(entity->getVelX() * -1);
+        if (collisionDepth <= entity->getVelX()) {
+            entity->changePosX(collisionDepth * -1);
         }
     } else if ((collision & LEFT) > 0) {
         collisionDepth = pHitBox.x - wHitBox.x - wHitBox.w;
-        if (collisionDepth > entity->getVelX()) {
-            entity->changePosX(entity->getVelX() * -1);
+        if (collisionDepth >= entity->getVelX()) {
+            entity->changePosX(collisionDepth * -1);
         }
     }
 
     if ((collision & TOP) > 0) {
         collisionDepth = pHitBox.y - wHitBox.y - wHitBox.h;
-        if (collisionDepth > entity->getVelY()) {
-            entity->changePosY(entity->getVelY() * -1);
+        if (collisionDepth >= entity->getVelY()) {
+            entity->changePosY(collisionDepth * -1);
         }
     } else if ((collision & BOTTOM) > 0) {
         collisionDepth = pHitBox.y + pHitBox.h - wHitBox.y;
-        if (collisionDepth < entity->getVelY()) {
-            entity->changePosY(entity->getVelY() * -1);
+        if (collisionDepth <= entity->getVelY()) {
+            entity->changePosY(collisionDepth * -1);
             entity->setJump(true);
         }
     }
 }
+
+// int Game::checkCollision(SDL_Rect hitbox1, SDL_Rect hitbox2) {
+//     int collision = 0;
+//     int bottom1 = hitbox1.y + hitbox1.h;
+//     int bottom2 = hitbox2.y + hitbox2.h;
+//     int right1 = hitbox1.x + hitbox1.w;
+//     int right2 = hitbox2.x + hitbox2.w;
+
+//     int b_collision = bottom2 - hitbox1.y;
+//     int t_collision = bottom1 - hitbox2.y;
+//     int l_collision = right1 - hitbox2.x;
+//     int r_collision = right2 - hitbox1.x;
+//     cout << b_collision << "/" << t_collision << "/" << l_collision << "/" << r_collision << endl;
+
+//     if (t_collision < b_collision && t_collision < l_collision && t_collision < r_collision ) {                           
+//         return TOP;
+//     }
+//     if (b_collision < t_collision && b_collision < l_collision && b_collision < r_collision) {
+//         return BOTTOM;
+//     }
+//     if (l_collision < r_collision && l_collision < t_collision && l_collision < b_collision) {
+//         return LEFT;
+//     }
+//     if (r_collision < l_collision && r_collision < t_collision && r_collision < b_collision ) {
+//         return RIGHT;
+//     }
+// }
 
 int Game::checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2) {
     int collision = 0;
@@ -353,8 +378,7 @@ int Game::checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2) {
         if (top1 >= top2 && top1 <= bottom2) {
             // collision between top1 and bottom2
             collision = collision | TOP;
-        }
-        if (bottom1 >= top2 && bottom1 <= bottom2) {
+        } else if (bottom1 >= top2 && bottom1 <= bottom2) {
             // collision between bottom1 and top2
             collision = collision | BOTTOM;
         }
