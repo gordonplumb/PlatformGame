@@ -296,24 +296,24 @@ void Game::handleEntityWallCollision(AbstractEntity* entity, Wall* wall,
     if ((collision & RIGHT) > 0) {
         collisionDepth = pHitBox.x + pHitBox.w - wHitBox.x;
         if (collisionDepth <= entity->getVelX()) {
-            entity->changePosX(collisionDepth * -1);
+            entity->changePosX((collisionDepth + 1) * -1);
         }
     } else if ((collision & LEFT) > 0) {
         collisionDepth = pHitBox.x - wHitBox.x - wHitBox.w;
         if (collisionDepth >= entity->getVelX()) {
-            entity->changePosX(collisionDepth * -1);
+            entity->changePosX((collisionDepth - 1) * -1);
         }
     }
 
     if ((collision & TOP) > 0) {
         collisionDepth = pHitBox.y - wHitBox.y - wHitBox.h;
         if (collisionDepth >= entity->getVelY()) {
-            entity->changePosY(collisionDepth * -1);
+            entity->changePosY((collisionDepth - 1) * -1);
         }
     } else if ((collision & BOTTOM) > 0) {
         collisionDepth = pHitBox.y + pHitBox.h - wHitBox.y;
         if (collisionDepth <= entity->getVelY()) {
-            entity->changePosY(collisionDepth * -1);
+            entity->changePosY((collisionDepth + 1) * -1);
             entity->setJump(true);
         }
     }
