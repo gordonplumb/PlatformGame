@@ -1,15 +1,15 @@
 #include <patrolstrategy.h>
 
-PatrolStrategy::PatrolStrategy(int left, int right) {
-    leftBound = left;
-    rightBound = right;
-}
+PatrolStrategy::PatrolStrategy(int left, int right): leftBound(left),
+    rightBound(right) {}
 
-void PatrolStrategy::move(int& velx, int& vely, int posx, int posy, int speed,
-    int playerx, int playery) {
-    if (posx <= leftBound) {
-        velx = speed;
-    } else if (posx >= rightBound) {
-        velx = speed * -1;
+PatrolStrategy::~PatrolStrategy() {}
+
+void PatrolStrategy::move(int& xVel, int& yVel, int xPos, int yPos, int speed,
+    int playerX, int playerY) {
+    if (xPos <= leftBound) {
+        xVel = speed;
+    } else if (xPos >= rightBound) {
+        xVel = speed * -1;
     }
 }

@@ -9,15 +9,12 @@ Bee::Bee(int x, int y, MovementStrategy* strategy, Observer* observer):
 Bee::~Bee() {}
 
 void Bee::move(int playerx, int playery) {
-    strategy->move(mVelX, mVelY, mPosX, mPosY, mMaxSpeed, playerx, playery);
+    strategy->move(xVel, yVel, xPos, yPos, maxSpeed, playerx, playery);
 
-    mPosX += mVelX;
-    mPosY += mVelY;
+    xPos += xVel;
+    yPos += yVel;
 
-    if (mVelX != 0) {
-        mForward = !(mVelX > 0);
+    if (xVel != 0) {
+        forward = !(xVel > 0);
     }
-    
-    mHitBox.x = mPosX;
-    mHitBox.y = mPosY;
 }

@@ -5,18 +5,17 @@
 #include <texturewrapper.h>
 
 MovingObserver::MovingObserver(int id, View* view, TextureWrapper* texture,
-                               int maxWalkFrame, int xOffset, int yOffset):
-    Observer(id, view, texture, xOffset, yOffset) {
-    maxWalkingFrame = maxWalkFrame;
-}
+    int maxWalkFrame, int xOffset, int yOffset):
+    Observer(id, view, texture, xOffset, yOffset), maxWalkingFrame(maxWalkFrame)
+    {}
 
 MovingObserver::~MovingObserver() {
     removeFromView();
 }
 
-void MovingObserver::notify(int hp, int xPos, int yPos, bool forward, bool crouching,
-                      bool lookingUp, bool walking, double angle,
-                      SDL_Point* centre) {
+void MovingObserver::notify(int hp, int xPos, int yPos, bool forward,
+    bool crouching, bool lookingUp, bool walking, double angle, 
+    SDL_Point* centre) {
     SDL_Rect* clip;
 
     if (crouching) {
@@ -41,6 +40,6 @@ void MovingObserver::notify(int hp, int xPos, int yPos, bool forward, bool crouc
     SDL_Rect* camera = view->getCamera();
 
     texture->render(view->getRenderer(), xPos - xOffset, yPos - yOffset,
-                    camera->x, camera->y, clip, angle, centre,
-                    forward ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL);
+        camera->x, camera->y, clip, angle, centre,
+        forward ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL);
 }

@@ -1,5 +1,5 @@
-#ifndef _PLAYER_STATUS_OBSERVER_
-#define _PLAYER_STATUS_OBSERVER_
+#ifndef PLAYERSTATUSOBSERVER_H
+#define PLAYERSTATUSOBSERVER_H
 
 #include <observer.h>
 
@@ -13,8 +13,8 @@ class PlayerStatusObserver: public Observer {
     ~PlayerStatusObserver();
 
     void notify(int hp, int xPos, int yPos, bool forward, bool crouching,
-                bool lookingUp, bool walking, double angle = 0,
-                SDL_Point* centre = nullptr) override;
+        bool lookingUp, bool walking, double angle = 0,
+        SDL_Point* centre = nullptr) override;
 };
 
 #endif

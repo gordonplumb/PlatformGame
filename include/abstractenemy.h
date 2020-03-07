@@ -1,5 +1,5 @@
-#ifndef _ABSTRACT_ENEMY_
-#define _ABSTRACT_ENEMY_
+#ifndef ABSTRACTENEMY_H
+#define ABSTRACTENEMY_H
 
 #include <abstractentity.h>
 
@@ -16,7 +16,7 @@ class AbstractEnemy: public AbstractEntity {
         Observer* observer);
     ~AbstractEnemy();
 
-    virtual void move(int playerx = -1, int playery = -1);
+    virtual void move(int playerX, int playerY);
 };
 
 #endif

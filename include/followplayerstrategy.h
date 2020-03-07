@@ -1,5 +1,5 @@
-#ifndef _FOLLOW_PLAYER_STRATEGY_H_
-#define _FOLLOW_PLAYER_STRATEGY_H_
+#ifndef FOLLOWPLAYERSTRATEGY_H
+#define FOLLOWPLAYERSTRATEGY_H
 
 #include <movementstrategy.h>
 
@@ -10,8 +10,8 @@ class FollowPlayerStrategy: public MovementStrategy {
     FollowPlayerStrategy(bool flying);
     ~FollowPlayerStrategy();
 
-    void move(int& velx, int& vely, int posx, int posy, int speed,
-        int playerx, int playery) override;
+    void move(int& xVel, int& yVel, int xPos, int yPos, int speed,int playerX,
+        int playerY) override;
 };
 
 #endif

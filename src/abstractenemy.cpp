@@ -4,8 +4,8 @@
 
 AbstractEnemy::AbstractEnemy(int width, int height, int maxSpeed, int x, int y,
     int totalHP, int damage, MovementStrategy* strategy, Observer* observer): 
-    AbstractEntity(width, height, maxSpeed, x, y, totalHP, damage) {
-    this->strategy = strategy;
+    AbstractEntity(width, height, maxSpeed, x, y, totalHP, damage),
+    strategy(strategy) {
     addObserver(observer);
 }
 
@@ -13,15 +13,12 @@ AbstractEnemy::~AbstractEnemy() {}
 
 void AbstractEnemy::move(int playerx, int playery) {
     applyGravity();
-    strategy->move(mVelX, mVelY, mPosX, mPosY, mMaxSpeed, playerx, playery);
+    strategy->move(xVel, yVel, xPos, yPos, maxSpeed, playerx, playery);
 
-    mPosX += mVelX;
-    mPosY += mVelY;
+    xPos += xVel;
+    yPos += yVel;
 
-    if (mVelX != 0) {
-        mForward = !(mVelX > 0);
+    if (xVel != 0) {
+        forward = !(xVel > 0);
     }
-    
-    mHitBox.x = mPosX;
-    mHitBox.y = mPosY;
 }

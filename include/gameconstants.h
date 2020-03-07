@@ -1,5 +1,5 @@
-#ifndef _gameconstants_
-#define _gameconstants_
+#ifndef GAMECONSTANTS_H
+#define GAMECONSTANTS_H
 
 #include <string>
 

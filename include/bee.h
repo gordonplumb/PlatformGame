@@ -1,5 +1,5 @@
-#ifndef _BEE_H_
-#define _BEE_H_
+#ifndef BEE_H
+#define BEE_H
 
 #include <abstractenemy.h>
 
@@ -14,7 +14,7 @@ class Bee: public AbstractEnemy {
     Bee(int x, int y, MovementStrategy* strategy, Observer* observer);
     ~Bee();
 
-    void move(int playerx, int playery) override;
+    void move(int playerX, int playerY) override;
 };
 
 #endif

@@ -25,38 +25,38 @@ const int BOTTOM = 8;
 Game::Game(View* view) {
     this->view = view;
     timer = new Timer();
-    mPlayer = new Player(view->createMovingObserver(PLAYER_ID, 2, 5, 10));
-    mPlayer->addObserver(view->createPlayerStatusObserver());
+    player = new Player(view->createMovingObserver(PLAYER_ID, 2, 5, 10));
+    player->addObserver(view->createPlayerStatusObserver());
 }
 
 void Game::playerJump() {
-    if (mPlayer->canJump() && !mPlayer->isCrouching()) {
-        mPlayer->changeVelY(-15);
-        mPlayer->setJump(false);
+    if (player->getJump() && !player->isCrouching()) {
+        player->changeVelY(-15);
+        player->setJump(false);
     }
 }
 
 void Game::playerLookUp(bool isLookingUp) {
-    mPlayer->setLookingUp(isLookingUp);
+    player->setLookingUp(isLookingUp);
 }
 
 void Game::playerCrouch(bool isCrouching, bool left, bool right) {
     if (isCrouching) {
         if (left) {
-            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
+            player->changeVelX(Player::PLAYER_MAX_SPEED);
         }
         if (right) {
-            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
+            player->changeVelX(Player::PLAYER_MAX_SPEED * -1);
         }
     } else {
         if (left) {
-            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
+            player->changeVelX(Player::PLAYER_MAX_SPEED * -1);
         }
         if (right) {
-            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
+            player->changeVelX(Player::PLAYER_MAX_SPEED);
         }
     }
-    mPlayer->setCrouch(isCrouching);
+    player->setCrouch(isCrouching);
 }
 
 void Game::playerMove(bool stop, bool forward) {
@@ -64,14 +64,14 @@ void Game::playerMove(bool stop, bool forward) {
     if (stop) {
         multiplier *= -1;
     }
-    if (!mPlayer->isCrouching()) {
-        mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * multiplier);
+    if (!player->isCrouching()) {
+        player->changeVelX(Player::PLAYER_MAX_SPEED * multiplier);
     }
 }
 
 void Game::playerShoot() {
     Laser* laser;
-    laser = mPlayer->fireLaser();
+    laser = player->fireLaser();
     laser->addObserver(view->createMovingObserver(LASER_ID, 0));
     lasers.emplace_back(laser);
 }
@@ -83,20 +83,20 @@ void Game::playerDeath() {
 void Game::resetPlayerActions(bool left, bool right, bool up, bool down) {
     // resetting all actions that result from a held key 
     if (left) {
-        if (!mPlayer->isCrouching()) {
-            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED);
+        if (!player->isCrouching()) {
+            player->changeVelX(Player::PLAYER_MAX_SPEED);
         }
     }
     if (right) {
-        if (!mPlayer->isCrouching()) {
-            mPlayer->changeVelX(Player::PLAYER_MAX_SPEED * -1);
+        if (!player->isCrouching()) {
+            player->changeVelX(Player::PLAYER_MAX_SPEED * -1);
         }
     }
     if (up) {
-        mPlayer->setLookingUp(false);
+        player->setLookingUp(false);
     }
     if (down) {
-        mPlayer->setCrouch(false);
+        player->setCrouch(false);
     }
 }
 
@@ -104,7 +104,7 @@ void Game::update() {
     if (!(isPaused() || !isStarted())) {
         moveEntities();
         bool clear = levelCleared();
-        renderGame(mPlayer->getHP() <= 0, clear, levelIndex == NUM_LEVELS);
+        renderGame(player->getHP() <= 0, clear, levelIndex == NUM_LEVELS);
     }
 }
 
@@ -128,19 +128,19 @@ void Game::moveEntities() {
     }
 
     // move characters first
-    mPlayer->move(elapsed);
-    handleCharacterBorderCollision(mPlayer);
+    player->move(elapsed);
+    handleCharacterBorderCollision(player);
     for (AbstractEnemy *enemy : enemies) {
-        enemy->move(mPlayer->getHitBox().x, mPlayer->getHitBox().y);
+        enemy->move(player->getHitBox().x, player->getHitBox().y);
         handleCharacterBorderCollision(enemy);
     }
 
     int collision;
     // check for character collisions with walls
     for (Wall *wall : walls) {
-        collision = checkCollision(mPlayer->getHitBox(), wall->getHitBox());
+        collision = checkCollision(player->getHitBox(), wall->getHitBox());
         if (collision > 0) {
-            handleEntityWallCollision(mPlayer, wall, collision);
+            handleEntityWallCollision(player, wall, collision);
         }
         for (AbstractEnemy *enemy : enemies) {
             collision = checkCollision(enemy->getHitBox(), wall->getHitBox());
@@ -151,7 +151,7 @@ void Game::moveEntities() {
     }
 
     // remove recoil from previous actions
-    mPlayer->removeRecoil();
+    player->removeRecoil();
     for (AbstractEnemy* enemy : enemies) {
         enemy->removeRecoil();
     }
@@ -192,7 +192,8 @@ void Game::moveEntities() {
         if (lasers[i] == nullptr) continue;
         // check for laser collision with walls
         for (Wall *wall : walls) {
-            collision = checkCollision(lasers[i]->getHitBox(), wall->getHitBox());
+            collision = checkCollision(lasers[i]->getHitBox(),
+                wall->getHitBox());
             if (collision > 0) {
                 Laser* temp = lasers[i];
                 lasers[i] = nullptr;
@@ -203,13 +204,13 @@ void Game::moveEntities() {
     }
 
     // check for player enemy collision
-    if (!mPlayer->isInvincible()) {
+    if (!player->isInvincible()) {
         for (AbstractEnemy *enemy : enemies) {
             if (enemy == nullptr) continue;
-            int collision = checkCollision(mPlayer->getHitBox(),
+            int collision = checkCollision(player->getHitBox(),
                 enemy->getHitBox());
             if (collision > 0) {
-                handlePlayerEnemyCollision(mPlayer, collision,
+                handlePlayerEnemyCollision(player, collision,
                     enemy->getDamage());
                 break;
             }
@@ -234,13 +235,13 @@ void Game::moveEntities() {
     }
     lasers = newLasers;
     
-    if (mPlayer->getHP() <= 0) {
+    if (player->getHP() <= 0) {
         playerDeath();
     }
 }
 
 bool Game::levelCleared() {
-    SDL_Rect pHitbox = mPlayer->getHitBox();
+    SDL_Rect pHitbox = player->getHitBox();
 
     if (pHitbox.x >= goal.x && pHitbox.y >= goal.y 
         && pHitbox.x + pHitbox.w <= goal.x + goal.w
@@ -257,7 +258,7 @@ bool Game::levelCleared() {
 void Game::renderGame(bool dead, bool clear, bool win) {
     view->clearRenderer();
     view->renderTerrain(walls, goal);
-    mPlayer->notifyObservers();
+    player->notifyObservers();
     for (Laser* laser : lasers) {
         laser->notifyObservers();
     }
@@ -267,7 +268,8 @@ void Game::renderGame(bool dead, bool clear, bool win) {
     view->renderStatusText(dead, clear, win);
 }
 
-void Game::handlePlayerEnemyCollision(Player* player, int collision, int damage) {
+void Game::handlePlayerEnemyCollision(Player* player, int collision,
+    int damage) {
     if ((collision & RIGHT) > 0) {
         player->setXRecoil(-10);
     } else if ((collision & LEFT) > 0) {
@@ -285,7 +287,8 @@ void Game::handlePlayerEnemyCollision(Player* player, int collision, int damage)
 
 }
 
-void Game::handleEntityWallCollision(AbstractEntity* entity, Wall* wall, int collision) {
+void Game::handleEntityWallCollision(AbstractEntity* entity, Wall* wall,
+    int collision) {
     SDL_Rect pHitBox = entity->getHitBox();
     SDL_Rect wHitBox = wall->getHitBox();
     int collisionDepth;
@@ -315,33 +318,6 @@ void Game::handleEntityWallCollision(AbstractEntity* entity, Wall* wall, int col
         }
     }
 }
-
-// int Game::checkCollision(SDL_Rect hitbox1, SDL_Rect hitbox2) {
-//     int collision = 0;
-//     int bottom1 = hitbox1.y + hitbox1.h;
-//     int bottom2 = hitbox2.y + hitbox2.h;
-//     int right1 = hitbox1.x + hitbox1.w;
-//     int right2 = hitbox2.x + hitbox2.w;
-
-//     int b_collision = bottom2 - hitbox1.y;
-//     int t_collision = bottom1 - hitbox2.y;
-//     int l_collision = right1 - hitbox2.x;
-//     int r_collision = right2 - hitbox1.x;
-//     cout << b_collision << "/" << t_collision << "/" << l_collision << "/" << r_collision << endl;
-
-//     if (t_collision < b_collision && t_collision < l_collision && t_collision < r_collision ) {                           
-//         return TOP;
-//     }
-//     if (b_collision < t_collision && b_collision < l_collision && b_collision < r_collision) {
-//         return BOTTOM;
-//     }
-//     if (l_collision < r_collision && l_collision < t_collision && l_collision < b_collision) {
-//         return LEFT;
-//     }
-//     if (r_collision < l_collision && r_collision < t_collision && r_collision < b_collision ) {
-//         return RIGHT;
-//     }
-// }
 
 int Game::checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2) {
     int collision = 0;
@@ -443,12 +419,12 @@ void Game::initLevel() {
         } else if (flag == "g") {
             goal = {x, y, 70, 100};
         } else if (flag == "p") {
-            mPlayer->reset();
-            if (mPlayer->getHP() <= 0 || levelIndex == 0) {
-                mPlayer->changeHP(mPlayer->getTotalHP() - mPlayer->getHP());
+            player->reset();
+            if (player->getHP() <= 0 || levelIndex == 0) {
+                player->changeHP(player->getTotalHP() - player->getHP());
             }
-            mPlayer->changePosX(x);
-            mPlayer->changePosY(y);
+            player->changePosX(x);
+            player->changePosY(y);
         } else if (flag == "mb") {
             MovementStrategy* strategy = readMovementStrategy(iss);
             enemies.emplace_back(new MenacingBlob(x, y, strategy, 
@@ -497,7 +473,7 @@ void Game::respawnEnemies() {
 }
 
 void Game::killPlayer() {
-    mPlayer->changeHP(mPlayer->getHP() * -1);
+    player->changeHP(player->getHP() * -1);
 }
 #endif
 

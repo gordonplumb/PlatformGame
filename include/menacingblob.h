@@ -1,5 +1,5 @@
-#ifndef _MENACING_BLOB_
-#define _MENACING_BLOB_
+#ifndef MENACINGBLOB_H
+#define MENACINGBLOB_H
 
 #include <abstractenemy.h>
 

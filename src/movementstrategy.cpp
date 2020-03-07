@@ -1,4 +1,4 @@
 #include <movementstrategy.h>
 
-void MovementStrategy::move(int& velx, int& vely, int posx, int posy, int speed,
-    int playerx, int playery) {}
+void MovementStrategy::move(int& xVel, int& yVel, int xPos, int yPos, int speed,
+    int playerX, int playerY) {}

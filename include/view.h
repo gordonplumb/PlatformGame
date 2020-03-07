@@ -1,5 +1,5 @@
-#ifndef _VIEW_
-#define _VIEW_
+#ifndef VIEW_H
+#define VIEW_H
 
 #include <string>
 #include <map>
@@ -35,16 +35,21 @@ class View {
     View();
     ~View();
     bool init();
+
+    // rendering functions
     void renderTerrain(std::vector<Wall*> walls, SDL_Rect goal);
     void renderStatusText(bool gameOver, bool levelClear, bool win);
     void clearRenderer();
+
+    // manage observers
     Observer* createMovingObserver(int id, int maxWalkFrame, int xOffset = 0,
                                    int yOffset = 0);
     Observer* createPlayerStatusObserver();
     void removeObserver(Observer* observer);
 
+    
     void updateCamera(SDL_Point* point);
-    void setMax(SDL_Point* max);
+    void setMax(SDL_Point* max); // max point to render
 
     void updateTime(uint32_t time);
 

@@ -1,5 +1,5 @@
-#ifndef _WALL_H_
-#define _WALL_H_
+#ifndef WALL_H
+#define WALL_H
 
 #include <SDL2/SDL.h>
 

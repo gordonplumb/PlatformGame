@@ -62,8 +62,8 @@ void View::loadTextures() {
 bool View::init() {
     bool success = false;
 
-    if (SDL_Init( SDL_INIT_VIDEO ) == -1) {
-        cerr << "SDL failed to initialize, SDL_Error " << SDL_GetError() << endl;
+    if (SDL_Init(SDL_INIT_VIDEO) == -1) {
+        cerr << "SDL failed to initialize " << SDL_GetError() << endl;
     } else if (TTF_Init() == -1) {
         cerr << "TTF failed to initialize " << TTF_GetError() << endl;
     } else {
@@ -124,7 +124,6 @@ void View::renderTerrain(vector<Wall*> walls, SDL_Rect goal) {
 }
 
 void View::renderStatusText(bool gameOver, bool levelClear, bool win) {
-    // render time string
     textures[TIMER_ID]->render(renderer, SCREEN_WIDTH - 45, 5, 0, 0);
     if (win) {
         textures[YOU_WIN_ID]->render(renderer, SCREEN_WIDTH / 2 - 30,

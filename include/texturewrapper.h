@@ -1,5 +1,5 @@
-#ifndef _TEXTURE_WRAPPER_H_
-#define _TEXTURE_WRAPPER_H_
+#ifndef TEXTUREWRAPPER_H
+#define TEXTUREWRAPPER_H
 
 #include <string>
 #include <vector>
@@ -8,34 +8,29 @@
 typedef struct _TTF_Font TTF_Font;
 
 class TextureWrapper {
-    SDL_Texture* mTexture;
+    SDL_Texture* texture;
     std::vector<SDL_Rect*> clips;
-    int mWidth;
-    int mHeight;
+    int width;
+    int height;
 
     public:
     TextureWrapper();
 
     ~TextureWrapper();
 
-    bool init(std::string path, SDL_Renderer* renderer, int height = 0,
-              int width = 0);
+    bool init(std::string path, SDL_Renderer* renderer, int clipHeight = 0,
+        int clipWidth = 0);
 
     bool initFromText(std::string textureText, TTF_Font* font,
-                      SDL_Renderer* renderer, SDL_Color textColour);
+        SDL_Renderer* renderer, SDL_Color textColour);
 
     void free();
 
     void render(SDL_Renderer* renderer, int x, int y, int camX, int camY, 
-                SDL_Rect* clip = nullptr, double angle = 0.0, 
-                SDL_Point* centre = nullptr,
-                SDL_RendererFlip flip = SDL_FLIP_NONE);
+        SDL_Rect* clip = nullptr, double angle = 0.0, 
+        SDL_Point* centre = nullptr, SDL_RendererFlip flip = SDL_FLIP_NONE);
 
     void setColour(Uint8 red, Uint8 green, Uint8 blue);
-
-    int getWidth();
-
-    int getHeight();
 
     SDL_Rect* getClip(int index);
 };

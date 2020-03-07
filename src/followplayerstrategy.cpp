@@ -6,20 +6,24 @@ FollowPlayerStrategy::FollowPlayerStrategy(bool flying) {
 
 FollowPlayerStrategy::~FollowPlayerStrategy() {}
 
-void FollowPlayerStrategy::move(int& velx, int& vely, int posx, int posy,
-    int speed, int playerx, int playery) {
+void FollowPlayerStrategy::move(int& xVel, int& yVel, int xPos, int yPos,
+    int speed, int playerX, int playerY) {
 
-    if (playerx <= posx) {
-        velx = speed * -1;
-    } else if (playerx >= posx) {
-        velx = speed;
+    if (playerX < xPos) {
+        xVel = speed * -1;
+    } else if (playerX > xPos) {
+        xVel = speed;
+    } else {
+        xVel = 0;
     }
 
     if (flying) {
-        if (playery <= posy) {
-            vely = speed * -1;
+        if (playerY < yPos) {
+            yVel = speed * -1;
+        } else if (playerY > yPos) {
+            yVel = speed;
         } else {
-            vely = speed;
+            yVel = 0;
         }
     }
 }

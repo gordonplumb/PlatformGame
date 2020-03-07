@@ -1,5 +1,5 @@
-#ifndef _ZOMBIE_H_
-#define _ZOMBIE_H_
+#ifndef ZOMBIE_H
+#define ZOMBIE_H
 
 #include <abstractenemy.h>
 

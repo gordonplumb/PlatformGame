@@ -1,5 +1,5 @@
-#ifndef _TIMER_
-#define _TIMER_
+#ifndef TIMER_H
+#define TIMER_H
 
 class Timer {
     uint32_t startTicks;

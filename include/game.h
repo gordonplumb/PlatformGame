@@ -1,5 +1,5 @@
-#ifndef _GAME_H_
-#define _GAME_H_
+#ifndef GAME_H
+#define GAME_H
 
 #include <vector>
 #include <SDL2/SDL.h>
@@ -15,7 +15,7 @@ class Timer;
 class Game {
     View* view;
     Timer* timer;
-    Player* mPlayer;
+    Player* player;
     std::vector<Wall*> walls;
     std::vector<AbstractEnemy*> enemies;
     std::vector<Laser*> lasers;
@@ -25,12 +25,14 @@ class Game {
     int levelHeight;
     uint32_t time = 0;
 
+    // collision handling
     int checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2);
     void handlePlayerEnemyCollision(Player* player, int collision, int damage);
     void handleEntityWallCollision(AbstractEntity* entity, Wall* wall,
         int collision);
     void handleCharacterBorderCollision(AbstractEntity* entity);
 
+    // update helpers
     void moveEntities();
     bool levelCleared();
     void renderGame(bool dead, bool clear, bool win);
