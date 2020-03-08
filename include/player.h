@@ -1,6 +1,7 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include <memory>
 #include <abstractentity.h>
 
 class Laser;
@@ -12,15 +13,13 @@ class Player: public AbstractEntity {
     static const int PLAYER_HEIGHT = 70;
     static const int PLAYER_MAX_SPEED = 3;
 
-    Player(Observer* observer);
+    Player(std::unique_ptr<Observer> observer);
 
     ~Player();
 
     void move(uint32_t time);
     void notifyObservers() override;
     void reset();
-
-    Laser* fireLaser();
 };
 
 

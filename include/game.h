@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include <vector>
+#include <memory>
 #include <SDL2/SDL.h>
 
 class Player;
@@ -13,12 +14,12 @@ class View;
 class Timer;
 
 class Game {
-    View* view;
-    Timer* timer;
-    Player* player;
-    std::vector<Wall*> walls;
-    std::vector<AbstractEnemy*> enemies;
-    std::vector<Laser*> lasers;
+    std::shared_ptr<View> view;
+    std::unique_ptr<Timer> timer;
+    std::unique_ptr<Player> player;
+    std::vector<std::unique_ptr<Wall>> walls;
+    std::vector<std::unique_ptr<AbstractEnemy>> enemies;
+    std::vector<std::unique_ptr<Laser>> lasers;
     SDL_Rect goal;
     int levelIndex = 0;
     int levelWidth;
@@ -27,10 +28,10 @@ class Game {
 
     // collision handling
     int checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2);
-    void handlePlayerEnemyCollision(Player* player, int collision, int damage);
-    void handleEntityWallCollision(AbstractEntity* entity, Wall* wall,
+    void handlePlayerEnemyCollision(Player& player, int collision, int damage);
+    void handleEntityWallCollision(AbstractEntity& entity, Wall& wall,
         int collision);
-    void handleCharacterBorderCollision(AbstractEntity* entity);
+    void handleCharacterBorderCollision(AbstractEntity& entity);
 
     // update helpers
     void moveEntities();
@@ -38,8 +39,9 @@ class Game {
     void renderGame(bool dead, bool clear, bool win);
 
     public:
-    Game(View* view);
+    Game();
     ~Game();
+    bool init();
 
     void initLevel();
 

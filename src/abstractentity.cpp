@@ -1,16 +1,15 @@
+#include <memory>
 #include <abstractentity.h>
 #include <observer.h>
+
+using namespace std;
 
 AbstractEntity::AbstractEntity(int width, int height, int maxSpeed, int xPos,
     int yPos, int totalHP, int damage): width(width), height(height),
     maxSpeed(maxSpeed), xPos(xPos), yPos(yPos), totalHP(totalHP),
     hitpoints(totalHP), damage(damage) {}
 
-AbstractEntity::~AbstractEntity() {
-    for (Observer* observer : observers) {
-        delete observer;
-    }
-}
+AbstractEntity::~AbstractEntity() {}
 
 void AbstractEntity::changePosX(int amount) {
     xPos += amount;
@@ -40,6 +39,10 @@ void AbstractEntity::removeRecoil() {
 bool AbstractEntity::getJump() {
     // y vel > 1 means entity is falling or being pushed down
     return canJump && yVel <= 1;
+}
+
+bool AbstractEntity::isForward() {
+    return forward;
 }
 
 bool AbstractEntity::isCrouching() {
@@ -76,12 +79,12 @@ void AbstractEntity::setInvincibility(bool invincible, uint32_t time) {
     }
 }
 
-void AbstractEntity::addObserver(Observer* observer) {
-    this->observers.push_back(observer);
+void AbstractEntity::addObserver(unique_ptr<Observer> observer) {
+    this->observers.push_back(std::move(observer));
 }
 
 void AbstractEntity::notifyObservers() {
-    for (Observer* observer : observers) {
+    for (auto& observer : observers) {
         observer->notify(hitpoints, xPos, yPos, forward, crouching, lookingUp,
             xVel != 0);
     }

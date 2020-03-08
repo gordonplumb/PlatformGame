@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <memory>
 #include <iostream>
 #include <string>
 #include <view.h>
@@ -6,13 +7,8 @@
 
 using namespace std;
 
-Game* game;
-View* view;
+unique_ptr<Game> game;
 uint8_t prevKeyState[SDL_NUM_SCANCODES];
-
-void close() {
-    delete view;
-}
 
 void handleEvent(SDL_Event& event) {
     const uint8_t* state = SDL_GetKeyboardState(nullptr);
@@ -119,14 +115,13 @@ void handleEvent(SDL_Event& event) {
 }
 
 int main(int argc, char** argv) {
-    view = new View();
-    if (!view->init()) {
+    game = make_unique<Game>();
+    if (!game->init()) {
         cerr << "Failed to initialize" << endl;
     } else {
         bool quit = false;
         SDL_Event event;
         memset(prevKeyState, 0, sizeof(uint8_t) * SDL_NUM_SCANCODES);
-        game = new Game(view);
         game->initLevel();
 
         while (!quit) {
@@ -139,9 +134,6 @@ int main(int argc, char** argv) {
             game->update();
         }
     }
-
-    // destroy window
-    close();
 
     return 0;
 }

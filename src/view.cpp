@@ -1,5 +1,6 @@
 #include <iostream>
 #include <map>
+#include <memory>
 #include <vector>
 #include <algorithm>
 #include <string>
@@ -29,16 +30,21 @@ View::~View() {
     SDL_Quit();
 }
 
-TextureWrapper* View::loadTexture(string path, int height, int width) {
-    TextureWrapper* textureWrapper = new TextureWrapper();
+shared_ptr<View> View::getSharedPtr() {
+    return shared_from_this();
+}
+
+shared_ptr<TextureWrapper> View::loadTexture(string path, int height,
+    int width) {
+    shared_ptr<TextureWrapper> textureWrapper = make_shared<TextureWrapper>();
     textureWrapper->init(path, renderer, height, width);
 
     return textureWrapper;
 }
 
-TextureWrapper* View::loadTextureFromText(string text) {
-    TextureWrapper* textureWrapper = new TextureWrapper();
-    textureWrapper->initFromText(text, font, renderer, *fontColour);
+shared_ptr<TextureWrapper> View::loadTextureFromText(string text) {
+    shared_ptr<TextureWrapper> textureWrapper = make_shared<TextureWrapper>();
+    textureWrapper->initFromText(text, font, renderer, fontColour);
 
     return textureWrapper;
 }
@@ -89,10 +95,10 @@ bool View::init() {
                 // set colours for screen and font
                 SDL_SetRenderDrawColor(renderer, 192, 192, 192,
                     SDL_ALPHA_OPAQUE);
-                fontColour = new SDL_Color {0, 0, 0};
+                fontColour = {0, 0, 0};
 
                 // construct the camera for scrolling
-                camera = new SDL_Rect {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+                camera = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
                 
                 loadTextures();
 
@@ -105,22 +111,22 @@ bool View::init() {
 }
 
 
-void View::renderTerrain(vector<Wall*> walls, SDL_Rect goal) {
+void View::renderTerrain(vector<unique_ptr<Wall>>& walls, SDL_Rect goal) {
     // render walls
-    TextureWrapper* wallTexture = textures[WALL_ID];
-    for (Wall* wall : walls) {
+    shared_ptr<TextureWrapper> wallTexture = textures[WALL_ID];
+    for (auto& wall : walls) {
         SDL_Rect rect = wall->getHitBox();
         int DIM = 50;
         for (int i = 0; i < rect.h / DIM; i++) {
             for (int j = 0; j < rect.w / DIM; j++) {
                 wallTexture->render(renderer, rect.x + j * DIM,
-                    rect.y + i * DIM, camera->x, camera->y);
+                    rect.y + i * DIM, camera.x, camera.y);
             }
         }
     }
 
     // render goal
-    textures[GOAL_ID]->render(renderer, goal.x, goal.y, camera->x, camera->y);
+    textures[GOAL_ID]->render(renderer, goal.x, goal.y, camera.x, camera.y);
 }
 
 void View::renderStatusText(bool gameOver, bool levelClear, bool win) {
@@ -143,58 +149,52 @@ void View::clearRenderer() {
     SDL_RenderClear(renderer);
 }
 
-Observer* View::createMovingObserver(int id, int maxWalkFrame, int xOffset,
+unique_ptr<Observer> View::createMovingObserver(int id, int maxWalkFrame, int xOffset,
     int yOffset) {
-    Observer* observer = new MovingObserver(id, this, textures[id],
-        maxWalkFrame, xOffset, yOffset);
-    observers.emplace_back(observer);
+    unique_ptr<Observer> observer = make_unique<MovingObserver>(id,
+        getSharedPtr(), textures[id], maxWalkFrame, xOffset, yOffset);
     
     return observer;
 }
 
-Observer* View::createPlayerStatusObserver() {
-    Observer* observer = new PlayerStatusObserver(this, textures[HEART_ID]);
-    observers.emplace_back(observer);
+unique_ptr<Observer> View::createPlayerStatusObserver() {
+    unique_ptr<Observer> observer = make_unique<PlayerStatusObserver>(
+        getSharedPtr(), textures[HEART_ID]);
 
     return observer;
 }
 
-void View::removeObserver(Observer* observer) {
-    observers.erase(remove(observers.begin(), observers.end(), observer),
-        observers.end());
-}
+void View::updateCamera(SDL_Point point) {
+    camera.x = point.x - SCREEN_WIDTH / 2;
+    camera.y = point.y - SCREEN_HEIGHT / 2;
 
-void View::updateCamera(SDL_Point* point) {
-    camera->x = point->x - SCREEN_WIDTH / 2;
-    camera->y = point->y - SCREEN_HEIGHT / 2;
-
-    if (camera->x < 0) {
-        camera->x = 0;
-    } else if (camera->x > max->x - camera->w) {
-        camera->x = max->x - camera->w;
+    if (camera.x < 0) {
+        camera.x = 0;
+    } else if (camera.x > max.x - camera.w) {
+        camera.x = max.x - camera.w;
     }
-    if (camera->y < 0) {
-        camera->y = 0;
-    } else if (camera->y > max->y - camera->h) {
-        camera->y = max->y - camera->h;
+    if (camera.y < 0) {
+        camera.y = 0;
+    } else if (camera.y > max.y - camera.h) {
+        camera.y = max.y - camera.h;
     }
 }
 
-void View::setMax(SDL_Point* max) {
-    this->max = max;
+void View::setMax(int x, int y) {
+    this->max = {x, y};
 }
 
 void View::updateTime(Uint32 time) {
     timeText.str("");
     timeText << time;
     textures[TIMER_ID]->initFromText(timeText.str(), font, renderer,
-        *fontColour);
+        fontColour);
 }
 
 SDL_Renderer* View::getRenderer() {
     return renderer;
 }
 
-SDL_Rect* View::getCamera() {
+SDL_Rect View::getCamera() {
     return camera;
 }

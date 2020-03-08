@@ -10,6 +10,7 @@ class PatrolStrategy: public MovementStrategy {
     public:
     PatrolStrategy(int left, int right);
     ~PatrolStrategy();
+
     void move(int& xVel, int& yVel, int xPos, int yPos, int speed, int playerX,
         int playerY) override;
 };

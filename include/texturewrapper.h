@@ -9,7 +9,7 @@ typedef struct _TTF_Font TTF_Font;
 
 class TextureWrapper {
     SDL_Texture* texture;
-    std::vector<SDL_Rect*> clips;
+    std::vector<SDL_Rect> clips;
     int width;
     int height;
 
@@ -27,12 +27,12 @@ class TextureWrapper {
     void free();
 
     void render(SDL_Renderer* renderer, int x, int y, int camX, int camY, 
-        SDL_Rect* clip = nullptr, double angle = 0.0, 
-        SDL_Point* centre = nullptr, SDL_RendererFlip flip = SDL_FLIP_NONE);
+        int clipIndex = 0, double angle = 0.0, SDL_Point* centre = nullptr,
+        SDL_RendererFlip flip = SDL_FLIP_NONE);
 
     void setColour(Uint8 red, Uint8 green, Uint8 blue);
 
-    SDL_Rect* getClip(int index);
+    SDL_Rect getClip(int index);
 };
 
 #endif

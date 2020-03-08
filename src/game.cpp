@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <memory>
 #include <game.h>
 #include <view.h>
 #include <timer.h>
@@ -15,6 +16,7 @@
 #include <patrolstrategy.h>
 #include <followplayerstrategy.h>
 #include <laser.h>
+
 using namespace std;
 
 const int RIGHT = 1;
@@ -22,11 +24,22 @@ const int LEFT = 2;
 const int TOP = 4;
 const int BOTTOM = 8;
 
-Game::Game(View* view) {
-    this->view = view;
-    timer = new Timer();
-    player = new Player(view->createMovingObserver(PLAYER_ID, 2, 5, 10));
-    player->addObserver(view->createPlayerStatusObserver());
+Game::Game() {}
+Game::~Game() {}
+
+bool Game::init() {
+    view = make_shared<View>();
+    if (!view->init()) {
+        return false;
+    } else {
+        timer = make_unique<Timer>();
+        player = make_unique<Player>(
+            view->createMovingObserver(PLAYER_ID, 2, 5, 10)
+        );
+        player->addObserver(view->createPlayerStatusObserver());
+
+        return true;
+    }
 }
 
 void Game::playerJump() {
@@ -70,10 +83,31 @@ void Game::playerMove(bool stop, bool forward) {
 }
 
 void Game::playerShoot() {
-    Laser* laser;
-    laser = player->fireLaser();
-    laser->addObserver(view->createMovingObserver(LASER_ID, 0));
-    lasers.emplace_back(laser);
+    bool horizontal, vertical;
+    int x, y;
+    bool forward = player->isForward();
+    bool lookingUp = player->isLookingUp();
+    int xModifier = forward ? 1 : -1;
+    int yModifier = lookingUp ? -1 : 1;
+    SDL_Rect hitbox = player->getHitBox();
+
+    if (player->isCrouching()) {
+        horizontal = true;
+        x = hitbox.x + (forward ? 31 : -10);
+        y = hitbox.y + 52;
+    } else if (lookingUp && player->getVelX() == 0) {
+        vertical = true;
+        x = hitbox.x + (forward ? 35 : 10);
+        y = hitbox.y + 15;
+    } else {
+        horizontal = true;
+        vertical = lookingUp;
+        x = hitbox.x + (forward ? 37 : -17);
+        y = hitbox.y + 38;
+    }
+
+    lasers.push_back(make_unique<Laser>(x, y, horizontal, vertical, xModifier,
+        yModifier, 1, view->createMovingObserver(LASER_ID, 0)));
 }
 
 void Game::playerDeath() {
@@ -108,14 +142,14 @@ void Game::update() {
     }
 }
 
-void Game::handleCharacterBorderCollision(AbstractEntity* entity) {
-    SDL_Rect hitbox = entity->getHitBox();
+void Game::handleCharacterBorderCollision(AbstractEntity& entity) {
+    SDL_Rect hitbox = entity.getHitBox();
     if (hitbox.x < 0 || hitbox.x + hitbox.w > levelWidth) {
-        entity->changePosX(entity->getVelX() * -1);
+        entity.changePosX(entity.getVelX() * -1);
     }
 
     if (hitbox.y < 0 || hitbox.y + hitbox.h > levelHeight) {
-        entity->changePosY(entity->getVelY() * -1);
+        entity.changePosY(entity.getVelY() * -1);
     }
 }
 
@@ -129,75 +163,67 @@ void Game::moveEntities() {
 
     // move characters first
     player->move(elapsed);
-    handleCharacterBorderCollision(player);
-    for (AbstractEnemy *enemy : enemies) {
+    handleCharacterBorderCollision(*player);
+    for (auto& enemy : enemies) {
         enemy->move(player->getHitBox().x, player->getHitBox().y);
-        handleCharacterBorderCollision(enemy);
+        handleCharacterBorderCollision(*enemy);
     }
 
     int collision;
     // check for character collisions with walls
-    for (Wall *wall : walls) {
+    for (auto& wall : walls) {
         collision = checkCollision(player->getHitBox(), wall->getHitBox());
         if (collision > 0) {
-            handleEntityWallCollision(player, wall, collision);
+            handleEntityWallCollision(*player, *wall, collision);
         }
-        for (AbstractEnemy *enemy : enemies) {
+        for (auto& enemy : enemies) {
             collision = checkCollision(enemy->getHitBox(), wall->getHitBox());
             if (collision > 0) {
-                handleEntityWallCollision(enemy, wall, collision);
+                handleEntityWallCollision(*enemy, *wall, collision);
             }
         }
     }
 
     // remove recoil from previous actions
     player->removeRecoil();
-    for (AbstractEnemy* enemy : enemies) {
+    for (auto& enemy : enemies) {
         enemy->removeRecoil();
     }
 
     // move lasers and check for collisions
-    for (int i = 0; i < lasers.size(); i++) {
-        lasers[i]->move();
-        SDL_Rect hitbox = lasers[i]->getHitBox();
+    for (auto& laser : lasers) {
+        laser->move();
+        SDL_Rect hitbox = laser->getHitBox();
 
         if (hitbox.x + hitbox.w < 0 || hitbox.x > levelWidth
             || hitbox.y + hitbox.h < 0 || hitbox.y > levelHeight) {
-            Laser* temp = lasers[i];
-            lasers[i] = nullptr;
-            delete temp;
+            laser = nullptr;
         }
 
-        if (lasers[i] == nullptr) continue;
+        if (laser == nullptr) continue;
         
         // check for laser collision with enemies
-        for (int j = 0; j < enemies.size(); j++) {
-            if (enemies[j] == nullptr) continue;
-            collision = checkCollision(lasers[i]->getHitBox(),
-                enemies[j]->getHitBox());
+        for (auto& enemy : enemies) {
+            if (enemy == nullptr) continue;
+            collision = checkCollision(laser->getHitBox(),
+                enemy->getHitBox());
             if (collision > 0) {
-                enemies[j]->changeHP(lasers[i]->getDamage() * -1);
-                if (enemies[j]->getHP() <= 0) {
-                    AbstractEnemy* temp = enemies[j];
-                    enemies[j] = nullptr;
-                    delete temp;
+                enemy->changeHP(laser->getDamage() * -1);
+                if (enemy->getHP() <= 0) {
+                    enemy = nullptr;
                 }
-                Laser* temp = lasers[i];
-                lasers[i] = nullptr;
-                delete temp;
+                laser = nullptr;
                 break;
             }
         }
         
-        if (lasers[i] == nullptr) continue;
+        if (laser == nullptr) continue;
         // check for laser collision with walls
-        for (Wall *wall : walls) {
-            collision = checkCollision(lasers[i]->getHitBox(),
+        for (auto& wall : walls) {
+            collision = checkCollision(laser->getHitBox(),
                 wall->getHitBox());
             if (collision > 0) {
-                Laser* temp = lasers[i];
-                lasers[i] = nullptr;
-                delete temp;
+                laser = nullptr;
                 break;
             }
         }
@@ -205,12 +231,12 @@ void Game::moveEntities() {
 
     // check for player enemy collision
     if (!player->isInvincible()) {
-        for (AbstractEnemy *enemy : enemies) {
+        for (auto& enemy : enemies) {
             if (enemy == nullptr) continue;
             int collision = checkCollision(player->getHitBox(),
                 enemy->getHitBox());
             if (collision > 0) {
-                handlePlayerEnemyCollision(player, collision,
+                handlePlayerEnemyCollision(*player, collision,
                     enemy->getDamage());
                 break;
             }
@@ -218,22 +244,24 @@ void Game::moveEntities() {
     }
 
     // refresh the enemy list
-    vector<AbstractEnemy*> newEnemies;
-    for (AbstractEnemy * enemy : enemies) {
-        if (enemy != nullptr) {
-            newEnemies.push_back(enemy);
+    auto enemyIter = enemies.begin();
+    while (enemyIter != enemies.end()) {
+        if (*enemyIter == nullptr) {
+            enemyIter = enemies.erase(enemyIter);
+        } else {
+            enemyIter++;
         }
     }
-    enemies = newEnemies;
 
     // refresh laser list
-    vector<Laser*> newLasers;
-    for (Laser* laser : lasers) {
-        if (laser != nullptr) {
-            newLasers.push_back(laser);
+    auto laserIter = lasers.begin();
+    while (laserIter != lasers.end()) {
+        if (*laserIter == nullptr) {
+            laserIter = lasers.erase(laserIter);
+        } else {
+            laserIter++;
         }
     }
-    lasers = newLasers;
     
     if (player->getHP() <= 0) {
         playerDeath();
@@ -259,62 +287,62 @@ void Game::renderGame(bool dead, bool clear, bool win) {
     view->clearRenderer();
     view->renderTerrain(walls, goal);
     player->notifyObservers();
-    for (Laser* laser : lasers) {
+    for (auto& laser : lasers) {
         laser->notifyObservers();
     }
-    for (AbstractEnemy* enemy : enemies) {
+    for (auto& enemy : enemies) {
         enemy->notifyObservers();
     }
     view->renderStatusText(dead, clear, win);
 }
 
-void Game::handlePlayerEnemyCollision(Player* player, int collision,
+void Game::handlePlayerEnemyCollision(Player& player, int collision,
     int damage) {
     if ((collision & RIGHT) > 0) {
-        player->setXRecoil(-10);
+        player.setXRecoil(-10);
     } else if ((collision & LEFT) > 0) {
-        player->setXRecoil(10);
+        player.setXRecoil(10);
     }
 
     if ((collision & TOP) > 0) {
-        player->setYRecoil(10);
+        player.setYRecoil(10);
     } else if ((collision & BOTTOM) > 0) {
-        player->setYRecoil(-10);
+        player.setYRecoil(-10);
     }
     
-    player->changeHP(damage * -1);
-    player->setInvincibility(true, timer->getTicks());
+    player.changeHP(damage * -1);
+    player.setInvincibility(true, timer->getTicks());
 
 }
 
-void Game::handleEntityWallCollision(AbstractEntity* entity, Wall* wall,
+void Game::handleEntityWallCollision(AbstractEntity& entity, Wall& wall,
     int collision) {
-    SDL_Rect pHitBox = entity->getHitBox();
-    SDL_Rect wHitBox = wall->getHitBox();
+    SDL_Rect pHitBox = entity.getHitBox();
+    SDL_Rect wHitBox = wall.getHitBox();
     int collisionDepth;
 
     if ((collision & RIGHT) > 0) {
         collisionDepth = pHitBox.x + pHitBox.w - wHitBox.x;
-        if (collisionDepth <= entity->getVelX()) {
-            entity->changePosX((collisionDepth + 1) * -1);
+        if (collisionDepth <= entity.getVelX()) {
+            entity.changePosX((collisionDepth + 1) * -1);
         }
     } else if ((collision & LEFT) > 0) {
         collisionDepth = pHitBox.x - wHitBox.x - wHitBox.w;
-        if (collisionDepth >= entity->getVelX()) {
-            entity->changePosX((collisionDepth - 1) * -1);
+        if (collisionDepth >= entity.getVelX()) {
+            entity.changePosX((collisionDepth - 1) * -1);
         }
     }
 
     if ((collision & TOP) > 0) {
         collisionDepth = pHitBox.y - wHitBox.y - wHitBox.h;
-        if (collisionDepth >= entity->getVelY()) {
-            entity->changePosY((collisionDepth - 1) * -1);
+        if (collisionDepth >= entity.getVelY()) {
+            entity.changePosY((collisionDepth - 1) * -1);
         }
     } else if ((collision & BOTTOM) > 0) {
         collisionDepth = pHitBox.y + pHitBox.h - wHitBox.y;
-        if (collisionDepth <= entity->getVelY()) {
-            entity->changePosY((collisionDepth + 1) * -1);
-            entity->setJump(true);
+        if (collisionDepth <= entity.getVelY()) {
+            entity.changePosY((collisionDepth + 1) * -1);
+            entity.setJump(true);
         }
     }
 }
@@ -363,8 +391,8 @@ int Game::checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2) {
     return collision;
 }
 
-MovementStrategy* readMovementStrategy(istringstream& iss) {
-    MovementStrategy* strategy;
+unique_ptr<MovementStrategy> readMovementStrategy(istringstream& iss) {
+    unique_ptr<MovementStrategy> strategy;
     string flag;
     iss >> flag;
     if (flag == "p") {
@@ -372,11 +400,11 @@ MovementStrategy* readMovementStrategy(istringstream& iss) {
         int right;
         iss >> left;
         iss >> right;
-        strategy = new PatrolStrategy(left, right);
+        strategy = make_unique<PatrolStrategy>(left, right);
     } else if (flag == "f") {
         bool flying;
         iss >> flying;
-        strategy = new FollowPlayerStrategy(flying);
+        strategy = make_unique<FollowPlayerStrategy>(flying);
     }
 
     return strategy;
@@ -400,7 +428,7 @@ void Game::initLevel() {
     if (file >> dim) {
         levelHeight = dim;
     }
-    view->setMax(new SDL_Point {levelWidth, levelHeight});
+    view->setMax(levelWidth, levelHeight);
 
     // read wall and enemy spawn information
     string s;
@@ -415,7 +443,7 @@ void Game::initLevel() {
         if (flag == "w") { // construct wall
             iss >> w;
             iss >> h;
-            walls.emplace_back(new Wall(x, y, w, h));
+            walls.push_back(make_unique<Wall>(x, y, w, h));
         } else if (flag == "g") {
             goal = {x, y, 70, 100};
         } else if (flag == "p") {
@@ -426,16 +454,16 @@ void Game::initLevel() {
             player->changePosX(x);
             player->changePosY(y);
         } else if (flag == "mb") {
-            MovementStrategy* strategy = readMovementStrategy(iss);
-            enemies.emplace_back(new MenacingBlob(x, y, strategy, 
+            unique_ptr<MovementStrategy> strategy = readMovementStrategy(iss);
+            enemies.push_back(make_unique<MenacingBlob>(x, y, strategy, 
                 view->createMovingObserver(MEN_BLOB_ID, 2)));
         } else if (flag == "z") {
-            MovementStrategy* strategy = readMovementStrategy(iss);
-            enemies.emplace_back(new Zombie(x, y, strategy,
+            unique_ptr<MovementStrategy> strategy = readMovementStrategy(iss);
+            enemies.push_back(make_unique<Zombie>(x, y, strategy,
                 view->createMovingObserver(ZOMBIE_ID, 2)));
         } else if (flag == "b") {
-            MovementStrategy* strategy = readMovementStrategy(iss);
-            enemies.emplace_back(new Bee(x, y, strategy,
+            unique_ptr<MovementStrategy> strategy = readMovementStrategy(iss);
+            enemies.push_back(make_unique<Bee>(x, y, strategy,
                 view->createMovingObserver(BEE_ID, 2)));
         }
     }
@@ -457,16 +485,16 @@ void Game::respawnEnemies() {
         iss >> x;
         iss >> y;
         if (flag == "mb") {
-            MovementStrategy* strategy = readMovementStrategy(iss);
-            enemies.emplace_back(new MenacingBlob(x, y, strategy,
+            unique_ptr<MovementStrategy> strategy = readMovementStrategy(iss);
+            enemies.push_back(make_unique<MenacingBlob>(x, y, strategy,
                 view->createMovingObserver(MEN_BLOB_ID, 2)));
         } else if (flag == "z") {
-            MovementStrategy* strategy = readMovementStrategy(iss);
-            enemies.emplace_back(new Zombie(x, y, strategy,
+            unique_ptr<MovementStrategy> strategy = readMovementStrategy(iss);
+            enemies.push_back(make_unique<Zombie>(x, y, strategy,
                 view->createMovingObserver(ZOMBIE_ID, 2)));
         } else if (flag == "b") {
-            MovementStrategy* strategy = readMovementStrategy(iss);
-            enemies.emplace_back(new Bee(x, y, strategy,
+            unique_ptr<MovementStrategy> strategy = readMovementStrategy(iss);
+            enemies.push_back(make_unique<Bee>(x, y, strategy,
                 view->createMovingObserver(BEE_ID, 2)));
         }
     }

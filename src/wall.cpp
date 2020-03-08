@@ -9,6 +9,8 @@ Wall::Wall(int x, int y, int w, int h) {
     rect.h = h;
 }
 
+Wall::~Wall() {}
+
 SDL_Rect Wall::getHitBox() {
     return rect;
 }

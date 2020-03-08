@@ -1,3 +1,4 @@
+#include <memory>
 #include <string>
 #include <iostream>
 #include <texturewrapper.h>
@@ -44,8 +45,8 @@ bool TextureWrapper::init(string path, SDL_Renderer* renderer,
             int col = width / clipWidth;
             for (int i = 0; i < row; i++) {
                 for (int j = 0; j < col; j++) {
-                    SDL_Rect* clip = new SDL_Rect {clipWidth * j,
-                        clipHeight * i, clipWidth, clipHeight};
+                    SDL_Rect clip = {clipWidth * j, clipHeight * i, clipWidth,
+                        clipHeight};
                     clips.emplace_back(clip);
                 }
             }
@@ -62,7 +63,7 @@ bool TextureWrapper::initFromText(std::string textureText, TTF_Font* font,
     free();
 
     SDL_Surface* textSurface = TTF_RenderText_Solid(font, textureText.c_str(),
-                                                    textColour);
+            textColour);
     
     if (textSurface == nullptr) {
         cerr << "Unable to render text surface " << TTF_GetError() << endl;
@@ -93,22 +94,24 @@ void TextureWrapper::free() {
 }
 
 void TextureWrapper::render(SDL_Renderer* renderer, int x, int y, int camX,
-                            int camY, SDL_Rect* clip, double angle,
+                            int camY, int clipIndex, double angle,
                             SDL_Point* centre, SDL_RendererFlip flip) {
     SDL_Rect renderRect = {x - camX, y - camY, width, height};
 
-    if (clip != nullptr) {
-        renderRect.w = clip->w;
-        renderRect.h = clip->h;
+    if (clips.size() != 0) {
+        renderRect.w = clips[clipIndex].w;
+        renderRect.h = clips[clipIndex].h;
     }
+    
 
-    SDL_RenderCopyEx(renderer, texture, clip, &renderRect, angle, centre, flip);
+    SDL_RenderCopyEx(renderer, texture, &(clips[clipIndex]), &renderRect,
+        angle, centre, flip);
 }
 
 void TextureWrapper::setColour(Uint8 red, Uint8 green, Uint8 blue) {
     SDL_SetTextureColorMod(texture, red, green, blue);
 }
 
-SDL_Rect* TextureWrapper::getClip(int index) {
+SDL_Rect TextureWrapper::getClip(int index) {
     return clips.at(index);
 }

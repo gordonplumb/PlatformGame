@@ -1,6 +1,7 @@
 #ifndef BEE_H
 #define BEE_H
 
+#include <memory>
 #include <abstractenemy.h>
 
 class Bee: public AbstractEnemy {
@@ -11,7 +12,8 @@ class Bee: public AbstractEnemy {
     static const int MAX_HP = 1;
     static const int DAMAGE = 1;
 
-    Bee(int x, int y, MovementStrategy* strategy, Observer* observer);
+    Bee(int x, int y, std::unique_ptr<MovementStrategy>& strategy,
+        std::unique_ptr<Observer> observer);
     ~Bee();
 
     void move(int playerX, int playerY) override;

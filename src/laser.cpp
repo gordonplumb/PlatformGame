@@ -1,10 +1,13 @@
+#include <memory>
 #include <laser.h>
 #include <observer.h>
 
+using namespace std;
+
 Laser::Laser(int x, int y, bool horizontal, bool vertical, int xModifier,
-             int yModifier, int damage):
-    AbstractEntity {LASER_WIDTH, LASER_HEIGHT, LASER_MAX_SPEED, x, y, 1, damage} {
-    centre = new SDL_Point {width / 2, height / 2};
+             int yModifier, int damage, unique_ptr<Observer> observer):
+    AbstractEntity {LASER_WIDTH, LASER_HEIGHT, LASER_MAX_SPEED, x, y, 1,
+        damage} {
     if (horizontal && vertical) {
         xVel = 7 * xModifier;
         yVel = 7 * yModifier;
@@ -18,6 +21,7 @@ Laser::Laser(int x, int y, bool horizontal, bool vertical, int xModifier,
         yVel = LASER_MAX_SPEED * yModifier;
         angle = 90;
     }
+    addObserver(std::move(observer));
 }
 
 Laser::~Laser() {}
@@ -28,8 +32,8 @@ void Laser::move() {
 }
 
 void Laser::notifyObservers() {
-    for (Observer* observer : observers) {
+    for (auto& observer : observers) {
         observer->notify(hitpoints, xPos, yPos, forward, crouching, lookingUp,
-            xVel != 0, angle, centre); 
+            xVel != 0, angle); 
     }
 }

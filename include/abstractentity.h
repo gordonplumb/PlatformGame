@@ -1,6 +1,7 @@
 #ifndef ABSTRACTENTITY_H
 #define ABSTRACTENTITY_H
 
+#include <memory>
 #include <vector>
 #include <SDL2/SDL.h>
 
@@ -34,7 +35,7 @@ class AbstractEntity {
     bool invincible = false;
     uint32_t invincibilityTimer = 0;
 
-    std::vector<Observer*> observers;
+    std::vector<std::unique_ptr<Observer>> observers;
 
     public:
     AbstractEntity(int width, int height, int maxSpeed, int xPos,
@@ -42,7 +43,7 @@ class AbstractEntity {
     virtual ~AbstractEntity();
 
     virtual void notifyObservers();
-    void addObserver(Observer* observer);
+    void addObserver(std::unique_ptr<Observer> observer);
 
     void applyGravity();
     void removeRecoil();
@@ -66,6 +67,7 @@ class AbstractEntity {
     int getVelX();
     int getVelY();
     bool getJump();
+    bool isForward();
     bool isCrouching();
     bool isLookingUp();
     bool isInvincible();

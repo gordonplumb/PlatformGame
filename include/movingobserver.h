@@ -1,6 +1,7 @@
 #ifndef MOVINGOBSERVER_H
 #define MOVINGOBSERVER_H
 
+#include <memory>
 #include <observer.h>
 
 class View;
@@ -12,13 +13,13 @@ class MovingObserver: public Observer {
     int maxWalkingFrame;
 
     public:
-    MovingObserver(int id, View* view, TextureWrapper* texture,
-        int maxWalkFrame, int xOffset, int yOffset);
+    MovingObserver(int id, std::shared_ptr<View> view,
+        std::shared_ptr<TextureWrapper> texture, int maxWalkFrame, int xOffset,
+        int yOffset);
     ~MovingObserver();
 
     void notify(int hp, int xPos, int yPos, bool forward, bool crouching,
-        bool lookingUp, bool walking, double angle = 0,
-        SDL_Point* centre = nullptr) override;
+        bool lookingUp, bool walking, double angle, SDL_Point centre) override;
 };
 
 #endif

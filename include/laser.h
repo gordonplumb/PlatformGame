@@ -1,13 +1,15 @@
 #ifndef LASER_H
 #define LASER_H
 
+#include <memory>
 #include <abstractentity.h>
+#include <observer.h>
 
 class SDL_Point;
+class Observer;
 
 class Laser: public AbstractEntity {
     double angle;
-    SDL_Point* centre;
     bool horizontal;
     bool vertical;
     int xModifier;
@@ -19,7 +21,7 @@ class Laser: public AbstractEntity {
     static const int LASER_MAX_SPEED = 10;
 
     Laser(int x, int y, bool horizontal, bool vertical, int xModifier,
-        int yModifier, int damage);
+        int yModifier, int damage, std::unique_ptr<Observer> observer);
     ~Laser();
 
     void move();
