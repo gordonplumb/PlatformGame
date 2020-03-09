@@ -21,17 +21,17 @@ void MovingObserver::notify(int hp, int xPos, int yPos, bool forward,
     int clip;
 
     if (crouching) {
-        clip = 7;
+        clip = (maxWalkingFrame + 1) * 2 + 1;
         walkingFrame = 0;
     } else if (!walking) {
-        clip = lookingUp ? 6 : 0;
+        clip = lookingUp ? (maxWalkingFrame + 1) * 2 : 0;
         walkingFrame = 0;
     } else {
-        int index = walkingFrame / 6;
-        if (lookingUp) index += 3;
+        int index = walkingFrame / 12;
+        if (lookingUp) index += maxWalkingFrame + 1;
         clip = index;
         walkingFrame++;
-        if (walkingFrame / 6 > maxWalkingFrame) {
+        if (walkingFrame / 12 > maxWalkingFrame) {
             walkingFrame = 0;
         }
     }

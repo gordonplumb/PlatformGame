@@ -50,12 +50,12 @@ shared_ptr<TextureWrapper> View::loadTextureFromText(string text) {
 }
 
 void View::loadTextures() {
-    textures.emplace(PLAYER_ID, loadTexture("media/player.bmp", 90, 50));
+    textures.emplace(PLAYER_ID, loadTexture("media/player.bmp", 72, 44));
     textures.emplace(LASER_ID, loadTexture("media/laser20x8.bmp"));
     textures.emplace(WALL_ID, loadTexture("media/wall.bmp"));
     textures.emplace(GOAL_ID, loadTexture("media/goal.bmp"));
     textures.emplace(MEN_BLOB_ID, loadTexture("media/menacingblob.bmp", 30, 30));
-    textures.emplace(ZOMBIE_ID, loadTexture("media/zombie.bmp", 80, 40));
+    textures.emplace(ALIEN_ID, loadTexture("media/alien.bmp", 70, 20));
     textures.emplace(BEE_ID, loadTexture("media/bee.bmp", 20, 30));
     textures.emplace(HEART_ID, loadTexture("media/heart.bmp"));
 
@@ -116,7 +116,7 @@ void View::renderTerrain(vector<unique_ptr<Wall>>& walls, SDL_Rect goal) {
     shared_ptr<TextureWrapper> wallTexture = textures[WALL_ID];
     for (auto& wall : walls) {
         SDL_Rect rect = wall->getHitBox();
-        int DIM = 50;
+        int DIM = 25;
         for (int i = 0; i < rect.h / DIM; i++) {
             for (int j = 0; j < rect.w / DIM; j++) {
                 wallTexture->render(renderer, rect.x + j * DIM,

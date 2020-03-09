@@ -9,8 +9,8 @@ class Observer;
 
 class Player: public AbstractEntity {    
     public:
-    static const int PLAYER_WIDTH = 40;
-    static const int PLAYER_HEIGHT = 70;
+    static const int PLAYER_WIDTH = 44;
+    static const int PLAYER_HEIGHT = 72;
     static const int PLAYER_MAX_SPEED = 3;
 
     Player(std::unique_ptr<Observer> observer);

@@ -10,7 +10,7 @@
 #include <wall.h>
 #include <player.h>
 #include <menacingblob.h>
-#include <zombie.h>
+#include <alien.h>
 #include <bee.h>
 #include <movementstrategy.h>
 #include <patrolstrategy.h>
@@ -34,7 +34,7 @@ bool Game::init() {
     } else {
         timer = make_unique<Timer>();
         player = make_unique<Player>(
-            view->createMovingObserver(PLAYER_ID, 2, 5, 10)
+            view->createMovingObserver(PLAYER_ID, 3)
         );
         player->addObserver(view->createPlayerStatusObserver());
 
@@ -93,17 +93,24 @@ void Game::playerShoot() {
 
     if (player->isCrouching()) {
         horizontal = true;
+        vertical = false;
         x = hitbox.x + (forward ? 31 : -10);
-        y = hitbox.y + 52;
-    } else if (lookingUp && player->getVelX() == 0) {
+        y = hitbox.y + 49;
+    } else if (lookingUp) {
+        if (player->getVelX() == 0) {
+            x = hitbox.x + (forward ? 40 : 15);
+            y = hitbox.y;
+        } else {
+            x = hitbox.x + (forward ? 36 : -6);
+            y = hitbox.y + (forward ? 17 : 5);
+            horizontal = true;
+        }
         vertical = true;
-        x = hitbox.x + (forward ? 35 : 10);
-        y = hitbox.y + 15;
     } else {
         horizontal = true;
-        vertical = lookingUp;
+        vertical = false;
         x = hitbox.x + (forward ? 37 : -17);
-        y = hitbox.y + 38;
+        y = hitbox.y + 36;
     }
 
     lasers.push_back(make_unique<Laser>(x, y, horizontal, vertical, xModifier,
@@ -459,8 +466,8 @@ void Game::initLevel() {
                 view->createMovingObserver(MEN_BLOB_ID, 2)));
         } else if (flag == "z") {
             unique_ptr<MovementStrategy> strategy = readMovementStrategy(iss);
-            enemies.push_back(make_unique<Zombie>(x, y, strategy,
-                view->createMovingObserver(ZOMBIE_ID, 2)));
+            enemies.push_back(make_unique<Alien>(x, y, strategy,
+                view->createMovingObserver(ALIEN_ID, 2)));
         } else if (flag == "b") {
             unique_ptr<MovementStrategy> strategy = readMovementStrategy(iss);
             enemies.push_back(make_unique<Bee>(x, y, strategy,
@@ -490,8 +497,8 @@ void Game::respawnEnemies() {
                 view->createMovingObserver(MEN_BLOB_ID, 2)));
         } else if (flag == "z") {
             unique_ptr<MovementStrategy> strategy = readMovementStrategy(iss);
-            enemies.push_back(make_unique<Zombie>(x, y, strategy,
-                view->createMovingObserver(ZOMBIE_ID, 2)));
+            enemies.push_back(make_unique<Alien>(x, y, strategy,
+                view->createMovingObserver(ALIEN_ID, 2)));
         } else if (flag == "b") {
             unique_ptr<MovementStrategy> strategy = readMovementStrategy(iss);
             enemies.push_back(make_unique<Bee>(x, y, strategy,

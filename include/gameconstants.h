@@ -13,7 +13,7 @@ const int LASER_ID = 1;
 const int WALL_ID = 5;
 const int GOAL_ID = 6;
 const int MEN_BLOB_ID = 10;
-const int ZOMBIE_ID = 11;
+const int ALIEN_ID = 11;
 const int BEE_ID = 12;
 
 // other ids
