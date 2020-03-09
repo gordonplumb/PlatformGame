@@ -38,9 +38,13 @@ void Player::notifyObservers() {
     }
 }
 
+void Player::setPos(int x, int y) {
+    xPos = x;
+    yPos = y;
+}
+
 void Player::reset() {
-    xPos = 0;
-    yPos = 0;
+    setPos();
     xVel = 0;
     yVel = 0;
     lookingUp = false;

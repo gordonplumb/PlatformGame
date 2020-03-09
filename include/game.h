@@ -21,6 +21,7 @@ class Game {
     std::vector<std::unique_ptr<AbstractEnemy>> enemies;
     std::vector<std::unique_ptr<Laser>> lasers;
     SDL_Rect goal;
+    SDL_Point spawn;
     int levelIndex = 0;
     int levelWidth;
     int levelHeight;
@@ -31,6 +32,7 @@ class Game {
     void handlePlayerEnemyCollision(Player& player, int collision, int damage);
     void handleEntityWallCollision(AbstractEntity& entity, Wall& wall,
         int collision);
+    void handlePlayerBorderCollision(Player& player);
     void handleCharacterBorderCollision(AbstractEntity& entity);
 
     // update helpers

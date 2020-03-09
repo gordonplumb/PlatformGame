@@ -19,6 +19,7 @@ class Player: public AbstractEntity {
 
     void move(uint32_t time);
     void notifyObservers() override;
+    void setPos(int x = 0, int y = 0);
     void reset();
 };
 

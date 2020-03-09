@@ -149,14 +149,39 @@ void Game::update() {
     }
 }
 
-void Game::handleCharacterBorderCollision(AbstractEntity& entity) {
-    SDL_Rect hitbox = entity.getHitBox();
-    if (hitbox.x < 0 || hitbox.x + hitbox.w > levelWidth) {
-        entity.changePosX(entity.getVelX() * -1);
+void Game::handlePlayerBorderCollision(Player& player) {
+    SDL_Rect hitbox = player.getHitBox();
+    if (hitbox.x < 0) {
+        player.changePosX(hitbox.x * -1 + 1);
+    } else if (hitbox.x + hitbox.w > levelWidth) {
+        int collisionDepth = levelWidth - hitbox.x - hitbox.w - 1;
+        player.changePosX(collisionDepth);
     }
 
-    if (hitbox.y < 0 || hitbox.y + hitbox.h > levelHeight) {
-        entity.changePosY(entity.getVelY() * -1);
+    if (hitbox.y < 0) {
+        player.changePosY(hitbox.y * -1 + 1);
+    } else if (hitbox.y > levelHeight) {
+        player.changeHP(-1);
+        player.setInvincibility(true, timer->getTicks());
+        player.changeVelY(player.getVelY() * -1);
+        player.setPos(spawn.x, spawn.y);
+    }
+}
+
+void Game::handleCharacterBorderCollision(AbstractEntity& entity) {
+    SDL_Rect hitbox = entity.getHitBox();
+
+    if (hitbox.x < 0) {
+        entity.changePosX(hitbox.x * -1 + 1);
+    } else if (hitbox.x + hitbox.w > levelWidth) {
+        int collisionDepth = levelWidth - hitbox.x - hitbox.w - 1;
+        entity.changePosX(collisionDepth);
+    }
+
+    if (hitbox.y < 0) {
+        entity.changePosY(hitbox.y * -1 + 1);
+    } else if (hitbox.y > levelHeight) {
+        entity.changeHP(entity.getHP() * -1);
     }
 }
 
@@ -170,7 +195,7 @@ void Game::moveEntities() {
 
     // move characters first
     player->move(elapsed);
-    handleCharacterBorderCollision(*player);
+    handlePlayerBorderCollision(*player);
     for (auto& enemy : enemies) {
         enemy->move(player->getHitBox().x, player->getHitBox().y);
         handleCharacterBorderCollision(*enemy);
@@ -369,6 +394,7 @@ int Game::checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2) {
     int top2 = hitBox2.y;
     int bottom2 = hitBox2.y + hitBox2.h;
 
+    //TODO: decide one one collision type, not both
     if ((top1 >= top2 && top1 <= bottom2) ||
         (bottom1 >= top2 && bottom1 <= bottom2) || 
         (top1 <= top2 && bottom1 >= bottom2)) {
@@ -460,6 +486,7 @@ void Game::initLevel() {
             }
             player->changePosX(x);
             player->changePosY(y);
+            spawn = {x, y};
         } else if (flag == "mb") {
             unique_ptr<MovementStrategy> strategy = readMovementStrategy(iss);
             enemies.push_back(make_unique<MenacingBlob>(x, y, strategy, 

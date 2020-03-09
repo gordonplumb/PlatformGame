@@ -10,10 +10,13 @@ using namespace std;
 unique_ptr<Game> game;
 uint8_t prevKeyState[SDL_NUM_SCANCODES];
 
-void handleEvent(SDL_Event& event) {
+bool handleEvent(SDL_Event& event) {
     const uint8_t* state = SDL_GetKeyboardState(nullptr);
     bool wasPaused = false;
 
+    if (state[SDL_SCANCODE_Q] == 1) {
+        return false;
+    }
     if (game->isPaused()) {
         // unpause
         if (state[SDL_SCANCODE_P] == 1 && prevKeyState[SDL_SCANCODE_P] == 0) {
@@ -112,6 +115,8 @@ void handleEvent(SDL_Event& event) {
         prevKeyState[SDL_SCANCODE_LEFT] = 0;
         prevKeyState[SDL_SCANCODE_RIGHT] = 0;
     }
+
+    return true;
 }
 
 int main(int argc, char** argv) {
@@ -126,10 +131,9 @@ int main(int argc, char** argv) {
 
         while (!quit) {
             while (SDL_PollEvent(&event) != 0) {
-                if (event.type == SDL_QUIT) {
+                if (event.type == SDL_QUIT || !handleEvent(event)) {
                     quit = true;
                 }
-                handleEvent(event);
             }
             game->update();
         }
