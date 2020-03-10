@@ -204,12 +204,14 @@ void Game::moveEntities() {
     int collision;
     // check for character collisions with walls
     for (auto& wall : walls) {
-        collision = checkCollision(player->getHitBox(), wall->getHitBox());
+        collision = getCollisionDirection(player->getHitBox(),
+            wall->getHitBox(), player->getVelX(), player->getVelY());
         if (collision > 0) {
             handleEntityWallCollision(*player, *wall, collision);
         }
         for (auto& enemy : enemies) {
-            collision = checkCollision(enemy->getHitBox(), wall->getHitBox());
+            collision = getCollisionDirection(enemy->getHitBox(),
+                wall->getHitBox(), enemy->getVelX(), enemy->getVelY());
             if (collision > 0) {
                 handleEntityWallCollision(*enemy, *wall, collision);
             }
@@ -237,8 +239,9 @@ void Game::moveEntities() {
         // check for laser collision with enemies
         for (auto& enemy : enemies) {
             if (enemy == nullptr) continue;
-            collision = checkCollision(laser->getHitBox(),
-                enemy->getHitBox());
+            collision = getCollisionDirection(laser->getHitBox(),
+                enemy->getHitBox(), laser->getVelX(), laser->getVelY(),
+                enemy->getVelX(), enemy->getVelY());
             if (collision > 0) {
                 enemy->changeHP(laser->getDamage() * -1);
                 if (enemy->getHP() <= 0) {
@@ -252,9 +255,7 @@ void Game::moveEntities() {
         if (laser == nullptr) continue;
         // check for laser collision with walls
         for (auto& wall : walls) {
-            collision = checkCollision(laser->getHitBox(),
-                wall->getHitBox());
-            if (collision > 0) {
+            if (checkCollision(laser->getHitBox(), wall->getHitBox())) {
                 laser = nullptr;
                 break;
             }
@@ -265,8 +266,9 @@ void Game::moveEntities() {
     if (!player->isInvincible()) {
         for (auto& enemy : enemies) {
             if (enemy == nullptr) continue;
-            int collision = checkCollision(player->getHitBox(),
-                enemy->getHitBox());
+            int collision = getCollisionDirection(player->getHitBox(),
+                enemy->getHitBox(), player->getVelX(), player->getVelY(),
+                enemy->getVelX(), enemy->getVelY());
             if (collision > 0) {
                 handlePlayerEnemyCollision(*player, collision,
                     enemy->getDamage());
@@ -355,31 +357,44 @@ void Game::handleEntityWallCollision(AbstractEntity& entity, Wall& wall,
 
     if ((collision & RIGHT) > 0) {
         collisionDepth = pHitBox.x + pHitBox.w - wHitBox.x;
-        if (collisionDepth <= entity.getVelX()) {
-            entity.changePosX((collisionDepth + 1) * -1);
-        }
+        entity.changePosX((collisionDepth + 1) * -1);
     } else if ((collision & LEFT) > 0) {
         collisionDepth = pHitBox.x - wHitBox.x - wHitBox.w;
-        if (collisionDepth >= entity.getVelX()) {
-            entity.changePosX((collisionDepth - 1) * -1);
-        }
+        entity.changePosX((collisionDepth - 1) * -1);
     }
 
     if ((collision & TOP) > 0) {
         collisionDepth = pHitBox.y - wHitBox.y - wHitBox.h;
-        if (collisionDepth >= entity.getVelY()) {
-            entity.changePosY((collisionDepth - 1) * -1);
-        }
+        entity.changePosY((collisionDepth - 1) * -1);
     } else if ((collision & BOTTOM) > 0) {
         collisionDepth = pHitBox.y + pHitBox.h - wHitBox.y;
-        if (collisionDepth <= entity.getVelY()) {
+        if ((collision & LEFT) == 0 || (collision & RIGHT == 0)) {
             entity.changePosY((collisionDepth + 1) * -1);
             entity.setJump(true);
         }
     }
 }
 
+
 int Game::checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2) {
+    // sides of hitbox 1
+    int left1 = hitBox1.x;
+    int right1 = hitBox1.x + hitBox1.w;
+    int top1 = hitBox1.y;
+    int bottom1 = hitBox1.y + hitBox1.h;
+
+    // sides of hitbox 2
+    int left2 = hitBox2.x;
+    int right2 = hitBox2.x + hitBox2.w;
+    int top2 = hitBox2.y;
+    int bottom2 = hitBox2.y + hitBox2.h;
+
+    return !(bottom1 < top2 || top1 > bottom2 ||
+             right1 < left2 || left1 > right2);
+}
+
+int Game::getCollisionDirection(SDL_Rect hitBox1, SDL_Rect hitBox2, int xVel1,
+    int yVel1, int xVel2, int yVel2) {
     int collision = 0;
     
     // sides of hitbox 1
@@ -394,30 +409,31 @@ int Game::checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2) {
     int top2 = hitBox2.y;
     int bottom2 = hitBox2.y + hitBox2.h;
 
-    //TODO: decide one one collision type, not both
-    if ((top1 >= top2 && top1 <= bottom2) ||
-        (bottom1 >= top2 && bottom1 <= bottom2) || 
-        (top1 <= top2 && bottom1 >= bottom2)) {
-        int leftDepth = right2 - left1;
-        int rightDepth = right1 - left2;
-        if (right1 >= left2 && right1 <= right2 && rightDepth < leftDepth) {
-            // collision between right1 and left2
+    if (!(bottom1 < top2 || top1 > bottom2 ||
+          right1 < left2 || left1 > right2)) {
+        // old sides of hitbox 1
+        int oldLeft1 = left1 - xVel1;
+        int oldRight1 = right1 - xVel1;
+        int oldTop1 = top1 - yVel1;
+        int oldBot1 = bottom1 - yVel1;
+
+        // old sides of hitbox 2
+        int oldLeft2 = left2 - xVel2;
+        int oldRight2 = right2 - xVel2;
+        int oldTop2 = top2 - yVel2;
+        int oldBot2 = bottom2 - yVel2;
+
+
+        if (oldRight1 < oldLeft2 && right1 >= left2) {
             collision = collision | RIGHT;
-        } else if (left1 >= left2 && left1 <= right2) {
-            // collision between left1 and right2
+        } else if (oldLeft1 > oldRight2 && left1 <= right2) {
             collision = collision | LEFT;
         }
-    }
 
-    if ((right1 >= left2 && right1 <= right2) ||
-        (left1 >= left2 && left1 <= right2) ||
-        (left1 <= left2 && right1 >= right2)) {
-        if (top1 >= top2 && top1 <= bottom2) {
-            // collision between top1 and bottom2
-            collision = collision | TOP;
-        } else if (bottom1 >= top2 && bottom1 <= bottom2) {
-            // collision between bottom1 and top2
+        if (oldBot1 < oldTop2 && bottom1 >= top2) {
             collision = collision | BOTTOM;
+        } else if (oldTop1 > oldBot2 && top1 <= bottom2) {
+            collision = collision | TOP;
         }
     }
 

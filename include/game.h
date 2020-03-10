@@ -29,6 +29,8 @@ class Game {
 
     // collision handling
     int checkCollision(SDL_Rect hitBox1, SDL_Rect hitBox2);
+    int getCollisionDirection(SDL_Rect hitBox1, SDL_Rect hitBox2, int xVel1,
+        int yVel1, int xVel2 = 0, int yVel2 = 0);
     void handlePlayerEnemyCollision(Player& player, int collision, int damage);
     void handleEntityWallCollision(AbstractEntity& entity, Wall& wall,
         int collision);
