@@ -4,11 +4,12 @@
 #include <movementstrategy.h>
 
 class PatrolStrategy: public MovementStrategy {
-    int leftBound;
-    int rightBound;
+    bool vertical;
+    int minBound;
+    int maxBound;
 
     public:
-    PatrolStrategy(int left, int right);
+    PatrolStrategy(bool vertical, int min, int max);
     ~PatrolStrategy();
 
     void move(int& xVel, int& yVel, int xPos, int yPos, int speed, int playerX,

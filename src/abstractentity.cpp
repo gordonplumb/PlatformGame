@@ -86,7 +86,7 @@ void AbstractEntity::addObserver(unique_ptr<Observer> observer) {
 void AbstractEntity::notifyObservers() {
     for (auto& observer : observers) {
         observer->notify(hitpoints, xPos, yPos, forward, crouching, lookingUp,
-            xVel != 0);
+            (xVel != 0 || yVel != 0));
     }
 }
 

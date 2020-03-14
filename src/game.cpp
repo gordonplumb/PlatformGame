@@ -178,9 +178,7 @@ void Game::handleCharacterBorderCollision(AbstractEntity& entity) {
         entity.changePosX(collisionDepth);
     }
 
-    if (hitbox.y < 0) {
-        entity.changePosY(hitbox.y * -1 + 1);
-    } else if (hitbox.y > levelHeight) {
+    if (hitbox.y > levelHeight) {
         entity.changeHP(entity.getHP() * -1);
     }
 }
@@ -368,7 +366,7 @@ void Game::handleEntityWallCollision(AbstractEntity& entity, Wall& wall,
         entity.changePosY((collisionDepth - 1) * -1);
     } else if ((collision & BOTTOM) > 0) {
         collisionDepth = pHitBox.y + pHitBox.h - wHitBox.y;
-        if ((collision & LEFT) == 0 || (collision & RIGHT == 0)) {
+        if ((collision & LEFT) == 0 || (collision & RIGHT) == 0) {
             entity.changePosY((collisionDepth + 1) * -1);
             entity.setJump(true);
         }
@@ -423,7 +421,6 @@ int Game::getCollisionDirection(SDL_Rect hitBox1, SDL_Rect hitBox2, int xVel1,
         int oldTop2 = top2 - yVel2;
         int oldBot2 = bottom2 - yVel2;
 
-
         if (oldRight1 < oldLeft2 && right1 >= left2) {
             collision = collision | RIGHT;
         } else if (oldLeft1 > oldRight2 && left1 <= right2) {
@@ -445,11 +442,13 @@ unique_ptr<MovementStrategy> readMovementStrategy(istringstream& iss) {
     string flag;
     iss >> flag;
     if (flag == "p") {
-        int left;
-        int right;
-        iss >> left;
-        iss >> right;
-        strategy = make_unique<PatrolStrategy>(left, right);
+        bool vertical;
+        int min;
+        int max;
+        iss >> vertical;
+        iss >> min;
+        iss >> max;
+        strategy = make_unique<PatrolStrategy>(vertical, min, max);
     } else if (flag == "f") {
         bool flying;
         iss >> flying;
@@ -487,8 +486,10 @@ void Game::initLevel() {
         istringstream iss {s};
 
         iss >> flag;
-        iss >> x;
-        iss >> y;
+        if (flag != "#") {
+            iss >> x;
+            iss >> y;
+        }
         if (flag == "w") { // construct wall
             iss >> w;
             iss >> h;
@@ -507,7 +508,7 @@ void Game::initLevel() {
             unique_ptr<MovementStrategy> strategy = readMovementStrategy(iss);
             enemies.push_back(make_unique<MenacingBlob>(x, y, strategy, 
                 view->createMovingObserver(MEN_BLOB_ID, 2)));
-        } else if (flag == "z") {
+        } else if (flag == "a") {
             unique_ptr<MovementStrategy> strategy = readMovementStrategy(iss);
             enemies.push_back(make_unique<Alien>(x, y, strategy,
                 view->createMovingObserver(ALIEN_ID, 2)));
@@ -538,7 +539,7 @@ void Game::respawnEnemies() {
             unique_ptr<MovementStrategy> strategy = readMovementStrategy(iss);
             enemies.push_back(make_unique<MenacingBlob>(x, y, strategy,
                 view->createMovingObserver(MEN_BLOB_ID, 2)));
-        } else if (flag == "z") {
+        } else if (flag == "a") {
             unique_ptr<MovementStrategy> strategy = readMovementStrategy(iss);
             enemies.push_back(make_unique<Alien>(x, y, strategy,
                 view->createMovingObserver(ALIEN_ID, 2)));
