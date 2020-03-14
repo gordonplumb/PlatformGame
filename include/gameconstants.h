@@ -25,8 +25,8 @@ const int YOU_WIN_ID = 24;
 
 // level specs
 const std::string LEVEL_PATHS[] = {
-    "levels/noenemies",
-    "levels/temp"
+    "levels/level1.txt",
+    "levels/level2.txt"
 };
 const int NUM_LEVELS = 2;
 
